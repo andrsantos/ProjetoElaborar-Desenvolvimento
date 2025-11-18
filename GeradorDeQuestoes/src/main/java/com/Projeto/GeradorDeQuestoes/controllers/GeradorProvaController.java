@@ -1,12 +1,16 @@
 package com.Projeto.GeradorDeQuestoes.controllers;
 
+import com.Projeto.GeradorDeQuestoes.dto.GeracaoAutomaticaRequest;
 import com.Projeto.GeradorDeQuestoes.dto.GerarQuestaoRequest;
 import com.Projeto.GeradorDeQuestoes.dto.Prova;
+import com.Projeto.GeradorDeQuestoes.dto.Questao;
 import com.Projeto.GeradorDeQuestoes.services.GeradorProvaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -47,6 +51,32 @@ public class GeradorProvaController {
             return ResponseEntity.ok(prova);
         } catch (Exception e) {
             return ResponseEntity.notFound().build(); 
+        }
+    }
+
+    @PostMapping("/{id}/questoes-automaticas")
+    public ResponseEntity<Prova> adicionarQuestoesAutomatico(
+            @PathVariable UUID id, 
+            @RequestBody GeracaoAutomaticaRequest request) {
+        
+        try {
+            Prova prova = provaService.adicionarQuestoesAutomatico(id, request);
+            return ResponseEntity.ok(prova);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build(); 
+        }
+    }
+    
+    @PostMapping("/{id}/manual")
+    public ResponseEntity<Prova> salvarProvaManual(
+            @PathVariable UUID id, 
+            @RequestBody List<Questao> questoes) { 
+        
+        try {
+            Prova prova = provaService.adicionarQuestoesManuais(id, questoes);
+            return ResponseEntity.ok(prova);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
         }
     }
 

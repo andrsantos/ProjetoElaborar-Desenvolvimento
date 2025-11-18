@@ -1,9 +1,11 @@
 package com.Projeto.GeradorDeQuestoes.services;
 
+import com.Projeto.GeradorDeQuestoes.dto.GeracaoAutomaticaRequest;
 import com.Projeto.GeradorDeQuestoes.dto.GerarQuestaoRequest;
 import com.Projeto.GeradorDeQuestoes.dto.ListaQuestoes;
 import com.Projeto.GeradorDeQuestoes.dto.Prova;
 import com.Projeto.GeradorDeQuestoes.dto.Questao;
+import com.Projeto.GeradorDeQuestoes.dto.TopicoQuantidade;
 import com.Projeto.GeradorDeQuestoes.entities.ProvaEntity;
 import com.Projeto.GeradorDeQuestoes.entities.QuestaoProvaEntity;
 import com.Projeto.GeradorDeQuestoes.repositories.ProvaRepository;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -99,4 +102,39 @@ public class GeradorProvaService {
         
         return pdfBytes;
     }
+
+    public Prova adicionarQuestoesAutomatico(UUID idProva, GeracaoAutomaticaRequest request) {
+        Prova prova = getProva(idProva);
+        if (prova == null) {
+            throw new RuntimeException("Prova não encontrada!");
+        }
+
+        for (TopicoQuantidade tp : request.topicos()) {
+            
+            GerarQuestaoRequest ragRequest = new GerarQuestaoRequest(tp.topico(), tp.quantidade());
+            
+            ListaQuestoes novasQuestoes = questaoService.gerarQuestoes(ragRequest);
+            
+            novasQuestoes.questoes().forEach(prova::adicionarQuestao);
+            
+            System.out.println("SERVICE: Adicionadas " + novasQuestoes.questoes().size() 
+                             + " questões do tópico '" + tp.topico() + "' à prova " + idProva);
+        }
+        
+        return prova;
+    }
+
+ 
+    public Prova adicionarQuestoesManuais(UUID idProva, List<Questao> questoes) {
+        Prova prova = getProva(idProva);
+        if (prova == null) {
+            throw new RuntimeException("Prova não encontrada!");
+        }
+        
+        questoes.forEach(prova::adicionarQuestao);
+        
+        System.out.println("SERVICE: Adicionadas " + questoes.size() + " questões manuais à prova " + idProva);
+        return prova;
+    }
+
 }

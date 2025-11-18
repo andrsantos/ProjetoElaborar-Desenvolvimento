@@ -1,192 +1,105 @@
-
 :host {
-  --cor-primaria: #0d6efd;     /* Azul primário (Bootstrap) */
-  --cor-secundaria: #6c757d;  /* Cinza secundário */
-  --cor-sucesso: #198754;    /* Verde */
-  --cor-perigo: #dc3545;     /* Vermelho */
-  --cor-fundo: #f8f9fa;      /* Cinza bem claro */
-  --cor-cartao: #ffffff;     /* Branco */
-  --cor-borda: #dee2e6;     /* Cinza da borda */
-  --cor-texto: #212529;      /* Preto suave */
-  --sombra-cartao: 0 4px 12px rgba(0, 0, 0, 0.05);
-  --raio-borda: 8px;
+  display: block;
 }
 
-/* --- Layout Principal --- */
 .container {
-  max-width: 900px;
-  margin: 2rem auto;
-  padding: 1.5rem;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color: var(--cor-texto);
+  max-width: 800px;
+  margin: 4rem auto; /* Mais margem no topo para centralizar visualmente */
+  padding: 0 1.5rem;
+  text-align: center;
 }
 
 header {
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid var(--cor-borda);
-  margin-bottom: 1.5rem;
+  margin-bottom: 3rem;
 }
 
 h1 {
-  color: var(--cor-primaria);
-  margin-bottom: 1rem;
+  font-size: 2.5rem;
+  color: var(--cor-secundaria);
+  margin-bottom: 0.5rem;
 }
 
-/* --- Formulário de Geração --- */
-.form-gerar {
-  margin-top: 1.5rem;
+.subtitle {
+  font-size: 1.2rem;
+  color: #6c757d;
+}
+
+/* Grid dos Cards */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  justify-content: center;
+}
+
+/* O Card em si */
+.menu-card {
   display: flex;
   flex-direction: column;
-  gap: 1rem; 
+  align-items: center;
+  background-color: #fff;
+  border: 1px solid var(--cor-borda);
+  border-radius: 12px;
+  padding: 2.5rem 1.5rem;
+  text-decoration: none;
+  color: var(--cor-texto);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--sombra-cartao);
 }
 
-.form-gerar h3 {
-  margin-bottom: 0;
+.menu-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+  border-color: var(--cor-primaria);
 }
 
-.form-gerar div {
+/* Ícones */
+.icon-container {
+  background-color: var(--cor-fundo);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  transition: background-color 0.3s ease;
+  color: var(--cor-secundaria);
 }
 
-.form-gerar label {
-  font-weight: 500;
-  min-width: 80px;
+/* Cores específicas ao passar o mouse */
+.menu-card.auto:hover .icon-container {
+  background-color: #e6f0ff; /* Azul claro */
+  color: var(--cor-primaria);
 }
 
-input[type="text"],
-input[type="number"] {
-  flex-grow: 1;
-  padding: 0.75rem;
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-borda);
-  font-size: 1rem;
+.menu-card.manual:hover .icon-container {
+  background-color: #fff8e6; /* Amarelo/Laranja claro */
+  color: #fd7e14;
 }
 
-/* --- Botões --- */
-button {
-  display: inline-block;
-  padding: 0.75rem 1.25rem;
-  font-size: 1rem;
-  font-weight: 500;
-  text-align: center;
-  border: none;
-  border-radius: var(--raio-borda);
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  background-color: var(--cor-primaria);
-  color: white;
+.card-content h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  color: var(--cor-secundaria);
 }
 
-button:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.card-content p {
+  color: #6c757d;
+  line-height: 1.5;
+  margin: 0;
 }
 
-/* Botão de Descartar */
-.btn-descartar {
-  background-color: var(--cor-perigo);
+.arrow {
+  margin-top: 1.5rem;
+  font-size: 1.5rem;
+  color: var(--cor-borda);
+  transition: transform 0.3s ease, color 0.3s ease;
 }
 
-.btn-descartar:hover {
-  background-color: #c82333; /* Vermelho mais escuro */
-}
-
-/* Botão "Criar Nova Prova" */
-header > button {
-  background-color: var(--cor-sucesso);
-}
-
-/* --- Lista de Questões --- */
-.lista-questoes {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem; /* Espaço entre cada cartão de questão */
-}
-
-.questao {
-  background-color: var(--cor-cartao);
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-borda);
-  padding: 1.5rem;
-  box-shadow: var(--sombra-cartao);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.questao:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
-}
-
-.questao h3 {
-  margin-top: 0;
-  color: var(--cor-texto);
-}
-
-/* Alternativas */
-.questao ul {
-  list-style-type: none;
-  padding-left: 0;
-  margin: 1rem 0;
-}
-
-.questao li {
-  padding: 0.5rem 0;
-}
-
-/* Resposta Correta */
-.questao p {
-  font-weight: 500;
-  color: var(--cor-sucesso);
-}
-
-/* Estilo para o rodapé e o botão de finalizar */
-.rodape-prova {
-  margin-top: 2rem;
-  text-align: center;
-}
-
-.btn-finalizar {
-  background-color: var(--cor-sucesso);
-  font-size: 1.25rem;
-  padding: 1rem 2rem;
-}
-
-.btn-finalizar:hover {
-  background-color: #157347; /* Verde mais escuro */
-}
-
-/* --- Estilos do Loader --- */
-
-/* O spinner */
-.loader {
-  width: 1.2em; /* Tamanho do loader (relativo ao texto do botão) */
-  height: 1.2em;
-  border: 2px solid rgba(255, 255, 255, 0.6); /* Borda cinza clara */
-  border-bottom-color: #ffffff; /* Borda branca (a que gira) */
-  border-radius: 50%;
-  display: inline-block;
-  box-sizing: border-box;
-  animation: rotation 1s linear infinite;
-  vertical-align: middle;
-  line-height: 1;
-}
-
-@keyframes rotation {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Quando o botão estiver desabilitado, 
-  mantém o cursor e a opacidade
-*/
-button:disabled {
-  opacity: 0.8;
-  cursor: wait; /* Muda o cursor para "espera" */
+.menu-card:hover .arrow {
+  color: var(--cor-primaria);
+  transform: translateX(5px);
 }

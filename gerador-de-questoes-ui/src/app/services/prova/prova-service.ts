@@ -5,6 +5,8 @@ import { Prova } from '../../models/prova.model';
 import { GerarQuestaoRequest } from '../../models/gerar-questao-request.model';
 import { ProvaInfo } from '../../models/prova-info.model';
 import { ProvaSalva } from '../../models/prova-entity.model';
+import { TopicoQuantidade } from '../../models/topico-quantidade.model';
+import { Questao } from '../../models/questao.model';
 
 @Injectable({
   providedIn: 'root',
@@ -13,6 +15,8 @@ export class ProvaService {
 
   private readonly API_URL = 'http://localhost:8080/api/provas';
   private readonly API_URL_SALVAS = 'http://localhost:8080/api/provas-salvas';
+  private readonly API_URL_TOPICOS = 'http://localhost:8080/api/topicos'; 
+  private readonly API_QUESTOES_GERAR = 'http://localhost:8080/api/questoes/gerar'; 
 
   constructor(private http: HttpClient) {}
 
@@ -26,6 +30,11 @@ export class ProvaService {
 
   adicionarQuestoes(id: string, request: GerarQuestaoRequest): Observable<Prova> {
     return this.http.post<Prova>(`${this.API_URL}/${id}/questoes`, request);
+  }
+
+  adicionarQuestoesAutomatico(id: string, topicos: TopicoQuantidade[]): Observable<Prova> {
+    const request = { topicos: topicos };
+    return this.http.post<Prova>(`${this.API_URL}/${id}/questoes-automaticas`, request);
   }
 
   descartarQuestao(id: string, indice: number): Observable<Prova> {
@@ -56,5 +65,23 @@ export class ProvaService {
       responseType: 'blob' 
     });
   }
+
+  getTopicosDisponiveis(): Observable<string[]> {
+    return this.http.get<string[]>(this.API_URL_TOPICOS);
+  }
+
+
+  gerarQuestaoAvulsa(topico: string, quantidade: number = 1): Observable<any> {
+    return this.http.post<any>(this.API_QUESTOES_GERAR, { 
+      topico: topico, 
+      quantidade: quantidade 
+    });
+  }
+
+
+  salvarProvaManual(id: string, questoes: Questao[]): Observable<Prova> {
+    return this.http.post<Prova>(`${this.API_URL}/${id}/manual`, questoes);
+  }
+
   
 }

@@ -1,0 +1,121 @@
+<div class="container">
+  
+  <header>
+    <h1>Gerador de Prova (Modo Automático)</h1>
+    <p class="subtitle" *ngIf="provaId">ID da Prova Ativa: {{ provaId }}</p>
+    <p class="subtitle" *ngIf="!provaId">Criando sessão de prova...</p>
+  </header>
+
+  <div class="form-secao">
+    <h3>1. Selecione os Tópicos</h3>
+    
+    <!-- MULTI-SELECT CUSTOMIZADO -->
+    <div class="custom-select-wrapper">
+      
+      <!-- O Gatilho -->
+      <div class="select-trigger" (click)="toggleDropdown()">
+        <span *ngIf="topicosSelecionados.length === 0">Clique para selecionar tópicos...</span>
+        <span *ngIf="topicosSelecionados.length > 0">
+          {{ topicosSelecionados.length }} tópico(s) selecionado(s)
+        </span>
+        <span class="arrow" [class.open]="isDropdownOpen">▼</span>
+      </div>
+
+      <!-- O Menu Flutuante (Lista de Checkboxes) -->
+      <div class="select-dropdown" *ngIf="isDropdownOpen">
+        <div *ngIf="topicosDisponiveis.length === 0" class="dropdown-loading">
+          Carregando tópicos...
+        </div>
+
+        <label *ngFor="let topico of topicosDisponiveis" class="dropdown-item">
+          <input 
+            type="checkbox" 
+            [checked]="isTopicoSelecionado(topico)"
+            (change)="onToggleTopico(topico, $event)"
+          >
+          {{ topico }}
+        </label>
+      </div>
+
+      <!-- Backdrop para fechar ao clicar fora -->
+      <div 
+        class="select-backdrop" 
+        *ngIf="isDropdownOpen" 
+        (click)="toggleDropdown()">
+      </div>
+    </div>
+
+    <!-- Resumo da Lista -->
+    <div class="lista-resumo-container">
+      <strong>Lista: </strong> 
+      <span class="texto-lista">{{ listaTopicosFormatada }}</span>
+    </div>
+
+    <hr>
+
+    <!-- Seções Dinâmicas -->
+    <div class="topicos-selecionados-container">
+      
+      <div class="topico-item-form" *ngFor="let item of topicosSelecionados; let i = index">
+        <div class="topico-item-header">
+          <h4>Tópico: {{ item.topico }}</h4>
+          <button (click)="onRemoverTopico(item.topico)" class="btn-remover-topico">
+            &times;
+          </button>
+        </div>
+        <div class="form-group">
+          <label for="quantidade-{{i}}">Número de Questões:</label>
+          <input 
+            id="quantidade-{{i}}" 
+            type="number" 
+            [(ngModel)]="item.quantidade"
+            min="1"
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Botão Gerar -->
+    <div class="form-gerar-final" *ngIf="topicosSelecionados.length > 0">
+      <button (click)="onGerarProvaAutomatica()" [disabled]="isLoadingAdicionar">
+        <span *ngIf="!isLoadingAdicionar">2. Gerar Questões da Prova</span>
+        <span *ngIf="isLoadingAdicionar" class="loader"></span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- RESULTADOS -->
+  <main *ngIf="prova$ | async as prova">
+    <div class="secao-carrinho" *ngIf="prova.questoes.length > 0">
+      <hr class="separador-grande">
+      <h2>3. Questões Adicionadas à Prova ({{ prova.questoes.length }})</h2>
+      
+      <div class="lista-questoes">
+        <div class="questao" *ngFor="let questao of prova.questoes; let i = index">
+          <h3>{{ i + 1 }}. {{ questao.enunciado }}</h3>
+          <ul *ngIf="questao.alternativas">
+            <li><strong>A)</strong> {{ questao.alternativas['a'] }}</li>
+            <li><strong>B)</strong> {{ questao.alternativas['b'] }}</li>
+            <li><strong>C)</strong> {{ questao.alternativas['c'] }}</li>
+            <li><strong>D)</strong> {{ questao.alternativas['d'] }}</li>
+          </ul>
+          <p><strong>Resposta Correta:</strong> {{ questao.respostaCorreta }}</p>
+          
+          <button class="btn-descartar" (click)="onDescartarQuestao(i)" [disabled]="descartandoIndex === i">
+            <span *ngIf="descartandoIndex !== i">Descartar Questão</span>
+            <span *ngIf="descartandoIndex === i" class="loader"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <footer *ngIf="prova.questoes.length > 0" class="rodape-prova">
+      <hr>
+      <button class="btn-finalizar" (click)="onFinalizarProva()" [disabled]="isLoadingFinalizar">
+        <span *ngIf="!isLoadingFinalizar">4. Salvar e Gerar PDF da Prova</span>
+        <span *ngIf="isLoadingFinalizar" class="loader"></span>
+      </button>
+    </footer>
+  </main>
+</div>

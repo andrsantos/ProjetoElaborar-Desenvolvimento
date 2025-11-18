@@ -1,9 +1,11 @@
 import { Routes } from '@angular/router';
-import { GeradorProva } from './pages/gerador-prova/gerador-prova';
 import { Dashboard } from './components/dashboard/dashboard';
 import { ProvasSalvas } from './pages/provas-salvas/provas-salvas';
 import { DetalheProva } from './pages/detalhe-prova/detalhe-prova';
 import { Alimentacao } from './pages/alimentacao/alimentacao';
+import { GeradorManual } from './pages/gerador-prova/gerador-manual/gerador-manual';
+import { GeradorAutomatico } from './pages/gerador-prova/gerador-automatico/gerador-automatico';
+import { GeradorProva } from './pages/gerador-prova/gerador-prova';
 
 export const routes: Routes = [
    {
@@ -12,10 +14,20 @@ export const routes: Routes = [
     title: 'Início - Gerador de Provas'
   },
   {
-    
-    path: 'gerar-prova', 
+    path:'gerar-prova', 
     component: GeradorProva,
+    title: 'Gerador de Prova'
+  },
+  {
+    
+    path: 'gerar-prova/automatico', 
+    component: GeradorAutomatico,
     title: 'Gerar Nova Prova'
+  },
+  {
+    path: 'gerar-prova/manual',
+    component: GeradorManual,
+    title: 'Gerador de Prova '
   },
   {
     path: 'provas-salvas',

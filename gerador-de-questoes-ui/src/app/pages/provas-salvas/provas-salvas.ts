@@ -29,9 +29,7 @@ export class ProvasSalvas implements OnInit {
   }
 
   private showToastOnLoad(): void {
-    console.log("Chegou no toast");
     const message = this.notificationService.getAndClearMessage();
-    console.log("Mensagem do toast:", message);
     if (message) {
       this.toastr.success(message, 'Sucesso!');
     }
