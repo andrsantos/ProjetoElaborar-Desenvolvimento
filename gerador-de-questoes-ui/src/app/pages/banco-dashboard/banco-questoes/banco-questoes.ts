@@ -2,7 +2,8 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
-import { BancoQuestoesService } from '../../services/banco-questoes/banco-questoes';
+import { Router } from '@angular/router';
+import { BancoQuestoesService } from '../../../services/banco-questoes/banco-questoes';
 
 @Component({
   selector: 'app-banco-questoes',
@@ -29,6 +30,7 @@ export class BancoQuestoes {
     alternativaB: '',
     alternativaC: '',
     alternativaD: '',
+    alternativaE: '',
     respostaCorreta: ''
   };
 
@@ -36,7 +38,8 @@ export class BancoQuestoes {
 
   constructor(
     private bancoService: BancoQuestoesService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private router: Router
   ) {}
 
   onSalvar(): void {
@@ -54,14 +57,16 @@ export class BancoQuestoes {
         'a': this.novaQuestao.alternativaA,
         'b': this.novaQuestao.alternativaB,
         'c': this.novaQuestao.alternativaC,
-        'd': this.novaQuestao.alternativaD
+        'd': this.novaQuestao.alternativaD,
+        'e': this.novaQuestao.alternativaE
       }
     };
 
     this.bancoService.salvarQuestao(payload).subscribe({
       next: () => {
-        this.toastr.success('Questão cadastrada com sucesso!','SUCESSO');
+        this.router.navigate(['/banco-questoes']);
         this.limparFormulario();
+        this.toastr.success("Questão cadastrada com sucesso!",'Sucesso!');
         this.isSaving = false;
       },
       error: () => {
@@ -91,7 +96,18 @@ export class BancoQuestoes {
         return false;
       }
     }
-    return true;
+    if(this.tipoSelecionado === 'MULTIPLA_ESCOLHA_5') {
+      if (!this.novaQuestao.alternativaA || !this.novaQuestao.alternativaB || 
+          !this.novaQuestao.alternativaC || !this.novaQuestao.alternativaD || !this.novaQuestao.alternativaE) {
+        this.toastr.warning('Preencha todas as 5 alternativas.');
+        return false;
+      }
+      if(!this.novaQuestao.respostaCorreta) {
+        this.toastr.warning('Selecione a alternativa correta (gabarito).');
+        return false;
+      }
+  }
+      return true;
   }
 
   limparFormulario(): void {
@@ -102,6 +118,7 @@ export class BancoQuestoes {
       alternativaB: '',
       alternativaC: '',
       alternativaD: '',
+      alternativaE: '',
       respostaCorreta: ''
     };
   }

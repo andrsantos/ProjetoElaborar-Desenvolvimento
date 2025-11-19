@@ -13,5 +13,17 @@ export class BancoQuestoesService {
   salvarQuestao(questao: any): Observable<any> {
     return this.http.post(this.API_URL, questao);
   }
+  listarTodas(): Observable<any[]> {
+    return this.http.get<any[]>(this.API_URL);
+  }
+  buscarPorId(id: string): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/${id}`);
+  }
+  atualizarQuestao(id: string, questao: any): Observable<any> {
+    return this.http.put(`${this.API_URL}/${id}`, questao);
+  }
+  excluirQuestao(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.API_URL}/${id}`);
+  }
 }
   

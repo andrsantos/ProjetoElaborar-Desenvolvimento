@@ -1,0 +1,22 @@
+<div class="container">
+  <header>
+    <h1>Escolher Questão do Banco</h1>
+    <button class="btn-voltar" (click)="onCancelar()">Cancelar e Voltar</button>
+  </header>
+
+  <div class="grid-questoes">
+    <div class="card-questao" *ngFor="let q of questoes">
+      <div class="card-header">
+        <span class="badge">{{ q.tipo }}</span>
+        <span class="badge-topic">{{ q.topico }}</span>
+      </div>
+      <p>{{ q.enunciado }}</p>
+      
+      <button class="btn-selecionar" (click)="onSelecionar(q)">
+        Incluir na Prova
+      </button>
+    </div>
+    
+    <div *ngIf="questoes.length === 0">Nenhuma questão encontrada.</div>
+  </div>
+</div>

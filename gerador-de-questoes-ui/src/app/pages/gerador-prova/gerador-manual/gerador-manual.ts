@@ -5,6 +5,7 @@ import { ToastrService } from 'ngx-toastr';
 import { Questao } from '../../../models/questao.model';
 import { Router } from '@angular/router';
 import { ProvaService } from '../../../services/prova/prova-service';
+import { ProvaManualStateService } from '../../../services/prova-manual-state/prova-manual-state';
 
 interface CardQuestao {
   indice: number;      
@@ -23,7 +24,8 @@ interface CardQuestao {
   styleUrls: ['./gerador-manual.scss']
 })
 export class GeradorManual implements OnInit {
-
+  
+  objectKeys = Object.keys; 
   quantidadeDesejada: number | null = null;
   cards: CardQuestao[] = [];
   topicosDisponiveis: string[] = [];
@@ -34,13 +36,46 @@ export class GeradorManual implements OnInit {
   constructor(
     private provaService: ProvaService,
     private toastr: ToastrService,
-    private router: Router
+    private router: Router,
+    private stateService: ProvaManualStateService
   ) {}
 
   ngOnInit(): void {
-
-    this.provaService.criarProva().subscribe(p => this.provaId = p.id);
     this.provaService.getTopicosDisponiveis().subscribe(t => this.topicosDisponiveis = t);
+
+    const estadoSalvo = this.stateService.lerEstado();
+    
+    if (estadoSalvo && estadoSalvo.provaId) {
+      this.provaId = estadoSalvo.provaId;
+      this.quantidadeDesejada = estadoSalvo.quantidadeDesejada;
+      this.cards = estadoSalvo.cards;
+      this.isCardsGenerated = true;
+      this.stateService.limparEstado(); 
+    } else {
+      this.provaService.criarProva().subscribe(p => this.provaId = p.id);
+    }
+  }
+
+  onTrocarMetodoGeracao(card: CardQuestao, metodo: 'IA' | 'BANCO'): void {
+    if (metodo === 'IA') {
+      if (card.usarIA === 'S') {
+        card.usarBanco = 'N';
+      }
+    } else {
+      if (card.usarBanco === 'S') {
+        card.usarIA = 'N';
+      }
+    }
+  }
+
+  onIrParaBanco(card: CardQuestao): void {
+    this.stateService.salvarEstado({
+      provaId: this.provaId,
+      quantidadeDesejada: this.quantidadeDesejada,
+      cards: this.cards,
+      indiceEdicao: card.indice 
+    });
+    this.router.navigate(['/banco-questoes/selecionar-questao']);
   }
 
   onGerarCards(): void {

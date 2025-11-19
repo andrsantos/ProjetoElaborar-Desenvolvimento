@@ -6,7 +6,10 @@ import { Alimentacao } from './pages/alimentacao/alimentacao';
 import { GeradorManual } from './pages/gerador-prova/gerador-manual/gerador-manual';
 import { GeradorAutomatico } from './pages/gerador-prova/gerador-automatico/gerador-automatico';
 import { GeradorProva } from './pages/gerador-prova/gerador-prova';
-import { BancoQuestoes } from './pages/banco-questoes/banco-questoes';
+import { GerenciarBanco } from './pages/banco-dashboard/gerenciar-banco/gerenciar-banco';
+import { BancoDashboard } from './pages/banco-dashboard/banco-dashboard';
+import { BancoQuestoes } from './pages/banco-dashboard/banco-questoes/banco-questoes';
+import { SelecionarQuestao } from './pages/banco-dashboard/selecionar-questao/selecionar-questao';
 
 export const routes: Routes = [
    {
@@ -42,8 +45,23 @@ export const routes: Routes = [
   },
   {
     path:'banco-questoes',
+    component: BancoDashboard,
+    title:'Dashboard Banco de Questões'
+  },
+  {
+    path:'banco-questoes/gerenciar',
+    component: GerenciarBanco,
+    title:'Gerenciar Banco de Questões'
+  },
+  {
+    path:'banco-questoes/novo',
     component: BancoQuestoes,
-    title:'Banco de Questões - RAG'
+    title:'Banco de Questões'
+  },
+  {
+    path:'banco-questoes/selecionar-questao',
+    component: SelecionarQuestao,
+    title: 'Selecionar Questão do Banco'
   },
   {
     path:'alimentacao',

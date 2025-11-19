@@ -4,10 +4,7 @@
     <p class="subtitle">Monte sua prova questão por questão, escolhendo tópicos específicos para cada uma.</p>
   </header>
 
-  <!-- 
-    PASSO 1: ESCOLHER QUANTIDADE
-    Só aparece se os cards ainda não foram gerados
-  -->
+  <!-- PASSO 1 -->
   <div class="setup-box" *ngIf="!isCardsGenerated">
     <label for="qtd">Quantas questões terá sua prova?</label>
     <div class="input-group">
@@ -16,15 +13,11 @@
     </div>
   </div>
 
-  <!-- 
-    PASSO 2: LISTA DE CARDS
-  -->
+  <!-- PASSO 2 -->
   <div class="cards-container" *ngIf="isCardsGenerated">
     
-    <!-- Loop pelos cards -->
     <div class="card-questao" *ngFor="let card of cards; let i = index">
       
-      <!-- CABEÇALHO DO CARD -->
       <div class="card-header">
         <h3>Questão {{ i + 1 < 10 ? '0' + (i + 1) : (i + 1) }}</h3>
         <span class="status-badge" [class.preenchido]="card.questaoPreenchida">
@@ -32,9 +25,7 @@
         </span>
       </div>
 
-      <!-- 
-        ESTADO A: FORMULÁRIO (Se não tem questão gerada)
-      -->
+      <!-- FORMULÁRIO -->
       <div class="card-body-form" *ngIf="!card.questaoPreenchida">
         
         <div class="form-row">
@@ -47,37 +38,68 @@
 
         <div class="form-row radio-group">
           <label>Gerar com IA?</label>
-          <label class="radio-label"><input type="radio" name="ia-{{i}}" value="S" [(ngModel)]="card.usarIA"> Sim</label>
-          <label class="radio-label"><input type="radio" name="ia-{{i}}" value="N" [(ngModel)]="card.usarIA"> Não</label>
+          <label class="radio-label">
+            <input type="radio" name="ia-{{i}}" value="S" 
+                   [(ngModel)]="card.usarIA" 
+                   (change)="onTrocarMetodoGeracao(card, 'IA')"> Sim
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="ia-{{i}}" value="N" 
+                   [(ngModel)]="card.usarIA" 
+                   (change)="onTrocarMetodoGeracao(card, 'IA')"> Não
+          </label>
         </div>
 
         <div class="form-row radio-group">
           <label>Usar Banco de Dados?</label>
-          <label class="radio-label"><input type="radio" name="db-{{i}}" value="S" [(ngModel)]="card.usarBanco"> Sim</label>
-          <label class="radio-label"><input type="radio" name="db-{{i}}" value="N" [(ngModel)]="card.usarBanco"> Não</label>
+          <label class="radio-label">
+            <input type="radio" name="db-{{i}}" value="S" 
+                   [(ngModel)]="card.usarBanco" 
+                   (change)="onTrocarMetodoGeracao(card, 'BANCO')"> Sim
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="db-{{i}}" value="N" 
+                   [(ngModel)]="card.usarBanco" 
+                   (change)="onTrocarMetodoGeracao(card, 'BANCO')"> Não
+          </label>
         </div>
 
         <div class="card-actions">
-          <button class="btn-gerar-single" (click)="onGerarQuestaoCard(card)" [disabled]="card.isLoading">
-            <span *ngIf="!card.isLoading">Gerar Questão</span>
+          <button class="btn-gerar-single" 
+                  *ngIf="card.usarIA === 'S'" 
+                  (click)="onGerarQuestaoCard(card)" 
+                  [disabled]="card.isLoading">
+            <span *ngIf="!card.isLoading">Gerar Questão com IA</span>
             <span *ngIf="card.isLoading" class="loader"></span>
+          </button>
+
+          <button class="btn-banco-single" 
+                  *ngIf="card.usarBanco === 'S'" 
+                  (click)="onIrParaBanco(card)">
+            Escolher questão do banco
           </button>
         </div>
       </div>
 
-      <!-- 
-        ESTADO B: QUESTÃO PREENCHIDA (Se já gerou)
-      -->
+      <!-- PREVIEW DA QUESTÃO -->
       <div class="card-body-preview" *ngIf="card.questaoPreenchida">
+        
         <p class="enunciado"><strong>{{ card.questaoPreenchida.enunciado }}</strong></p>
         
-        <ul class="alternativas-preview">
-          <li>a) {{ card.questaoPreenchida.alternativas['a'] }}</li>
-          <li>b) {{ card.questaoPreenchida.alternativas['b'] }}</li>
-          <li>c) {{ card.questaoPreenchida.alternativas['c'] }}</li>
-          <li>d) {{ card.questaoPreenchida.alternativas['d'] }}</li>
+        <!-- 
+          LISTA DINÂMICA DE ALTERNATIVAS 
+          Funciona para 4 ou 5 opções, ou V/F.
+          Só renderiza se 'alternativas' não for null.
+        -->
+        <ul class="alternativas-preview" *ngIf="card.questaoPreenchida.alternativas">
+          <li *ngFor="let key of objectKeys(card.questaoPreenchida.alternativas)">
+            <strong>{{ key | uppercase }})</strong> {{ card.questaoPreenchida.alternativas[key] }}
+          </li>
         </ul>
-        <p class="resposta-preview">Correta: {{ card.questaoPreenchida.respostaCorreta }}</p>
+
+        <p class="resposta-preview">
+          <strong>Resposta Correta:</strong> {{ card.questaoPreenchida.respostaCorreta }}
+        </p>
 
         <div class="card-actions">
           <button class="btn-descartar-single" (click)="onDescartarQuestaoCard(card)">
@@ -86,9 +108,8 @@
         </div>
       </div>
 
-    </div> <!-- Fim do Card -->
+    </div> 
 
-    <!-- RODAPÉ FINAL -->
     <div class="footer-actions">
       <button class="btn-finalizar-manual" (click)="onFinalizarProvaManual()" [disabled]="isFinalizing">
         <span *ngIf="!isFinalizing">Gerar Prova Completa (PDF)</span>

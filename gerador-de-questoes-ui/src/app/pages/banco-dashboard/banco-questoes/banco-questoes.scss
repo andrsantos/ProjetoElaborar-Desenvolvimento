@@ -75,4 +75,16 @@ h1 { color: var(--cor-secundaria); margin-top: 0; }
   border-radius: 50%;
   animation: rot 1s linear infinite;
 }
+
+
+.textarea-gabarito {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-borda);
+  font-size: 1rem;
+  font-family: inherit; 
+  resize: vertical; 
+  box-sizing: border-box;
+}
 @keyframes rot { to { transform: rotate(360deg); } }

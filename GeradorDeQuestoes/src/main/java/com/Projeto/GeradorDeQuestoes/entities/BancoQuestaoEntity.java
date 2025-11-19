@@ -29,7 +29,7 @@ public class BancoQuestaoEntity {
     @Column(columnDefinition = "jsonb")
     private Map<String, String> alternativas;
 
-    @Column(name = "resposta_correta")
+    @Column(name = "resposta_correta", columnDefinition = "TEXT")
     private String respostaCorreta;
 
     public UUID getId() { return id; }
