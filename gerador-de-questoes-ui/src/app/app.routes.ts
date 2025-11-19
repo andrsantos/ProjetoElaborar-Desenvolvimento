@@ -6,6 +6,7 @@ import { Alimentacao } from './pages/alimentacao/alimentacao';
 import { GeradorManual } from './pages/gerador-prova/gerador-manual/gerador-manual';
 import { GeradorAutomatico } from './pages/gerador-prova/gerador-automatico/gerador-automatico';
 import { GeradorProva } from './pages/gerador-prova/gerador-prova';
+import { BancoQuestoes } from './pages/banco-questoes/banco-questoes';
 
 export const routes: Routes = [
    {
@@ -38,6 +39,11 @@ export const routes: Routes = [
     path: 'provas-salvas/:id', 
     component: DetalheProva,
     title: 'Detalhe da Prova'
+  },
+  {
+    path:'banco-questoes',
+    component: BancoQuestoes,
+    title:'Banco de Questões - RAG'
   },
   {
     path:'alimentacao',
