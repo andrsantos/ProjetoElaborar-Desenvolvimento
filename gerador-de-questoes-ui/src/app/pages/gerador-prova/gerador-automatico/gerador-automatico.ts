@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
 import { TopicoQuantidade } from '../../../models/topico-quantidade.model';
+import { shareReplay } from 'rxjs/operators';
 
 @Component({
   selector: 'app-gerador-prova',
@@ -51,10 +52,14 @@ export class GeradorAutomatico implements OnInit {
     const isChecked = event.target.checked;
 
     if (isChecked) {
-      this.topicosSelecionados.push({
-        topico: topico,
-        quantidade: 5
-      });
+      const jaExiste = this.topicosSelecionados.some(t => t.topico === topico);
+      
+      if (!jaExiste) {
+        this.topicosSelecionados.push({
+          topico: topico,
+          quantidade: 5
+        });
+      }
     } else {
       this.onRemoverTopico(topico);
     }
@@ -72,59 +77,68 @@ export class GeradorAutomatico implements OnInit {
     }
     return this.topicosSelecionados.map(t => t.topico).join(', ');
   }
+  
   // onRemoverTopico(topicoParaRemover: string): void {
   //   this.topicosSelecionados = this.topicosSelecionados.filter(
   //     t => t.topico !== topicoParaRemover
   //   );
   // }
 
-  onCriarProva() {
-      this.isLoadingCriar = true; 
-      this.prova$ = this.provaService.criarProva();
-      this.prova$.subscribe({
-        next: p => {
-          this.provaId = p.id;
-          this.isLoadingCriar = false; 
-        },
-        error: () => this.isLoadingCriar = false 
-      });
-    }
+onCriarProva() {
 
-  onGerarProvaAutomatica() {
+    this.isLoadingCriar = true; 
+    this.prova$ = this.provaService.criarProva().pipe(
+      shareReplay(1) 
+    );
+
+    this.prova$.subscribe({
+      next: p => {
+        this.provaId = p.id;
+        this.isLoadingCriar = false; 
+      },
+      error: () => this.isLoadingCriar = false 
+    });
+  }
+
+onGerarProvaAutomatica() {
+
     if (!this.provaId || this.topicosSelecionados.length === 0) {
       alert("Por favor, adicione pelo menos um tópico."); 
       return;
     }
+    
     this.isLoadingAdicionar = true; 
+
     this.prova$ = this.provaService.adicionarQuestoesAutomatico(
       this.provaId, 
       this.topicosSelecionados
+    ).pipe(
+      shareReplay(1) 
     );
     
     this.prova$.subscribe({
       next: () => {
         this.isLoadingAdicionar = false;
-        this.topicosSelecionados = []; 
       },
       error: () => this.isLoadingAdicionar = false
     });
   }
 
-  onAdicionarQuestoes() {
-      if (!this.provaId) return;
-      this.isLoadingAdicionar = true; 
+  // onAdicionarQuestoes() {
+  //     if (!this.provaId) return;
+  //     this.isLoadingAdicionar = true; 
 
-      const request: GerarQuestaoRequest = {
-        topico: this.topico,
-        quantidade: this.quantidade
-      };
+  //     const request: GerarQuestaoRequest = {
+  //       topico: this.topico,
+  //       quantidade: this.quantidade
+  //     };
 
-      this.prova$ = this.provaService.adicionarQuestoes(this.provaId, request);
-      this.prova$.subscribe({
-        next: () => this.isLoadingAdicionar = false, 
-        error: () => this.isLoadingAdicionar = false 
-      });
-    }
+  //     this.prova$ = this.provaService.adicionarQuestoes(this.provaId, request);
+  //     this.prova$.subscribe({
+  //       next: () => this.isLoadingAdicionar = false, 
+  //       error: () => this.isLoadingAdicionar = false 
+  //     });
+  //   }
 
   onDescartarQuestao(indice: number) {
         if (!this.provaId) return;

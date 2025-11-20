@@ -14,8 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -104,21 +106,33 @@ public class GeradorProvaService {
     }
 
     public Prova adicionarQuestoesAutomatico(UUID idProva, GeracaoAutomaticaRequest request) {
+        
+        System.out.println("Topicos Length" + request.getTopicos().size());
+
         Prova prova = getProva(idProva);
         if (prova == null) {
             throw new RuntimeException("Prova não encontrada!");
         }
 
-        for (TopicoQuantidade tp : request.topicos()) {
+        Set<String> topicosProcessados = new HashSet<>();
+
+        for (TopicoQuantidade tp : request.getTopicos()) {
             
-            GerarQuestaoRequest ragRequest = new GerarQuestaoRequest(tp.topico(), tp.quantidade());
+            if (topicosProcessados.contains(tp.getTopico())) {
+                System.out.println("SERVICE: Tópico duplicado ignorado: " + tp.getTopico());
+                continue;
+            }
+            
+            topicosProcessados.add(tp.getTopico());
+
+            GerarQuestaoRequest ragRequest = new GerarQuestaoRequest(tp.getTopico(), tp.getQuantidade());
             
             ListaQuestoes novasQuestoes = questaoService.gerarQuestoes(ragRequest);
             
             novasQuestoes.questoes().forEach(prova::adicionarQuestao);
             
             System.out.println("SERVICE: Adicionadas " + novasQuestoes.questoes().size() 
-                             + " questões do tópico '" + tp.topico() + "' à prova " + idProva);
+                             + " questões do tópico '" + tp.getTopico() + "' à prova " + idProva);
         }
         
         return prova;

@@ -34,6 +34,7 @@ export class ProvaService {
 
   adicionarQuestoesAutomatico(id: string, topicos: TopicoQuantidade[]): Observable<Prova> {
     const request = { topicos: topicos };
+    console.log("Request adicionarQuestoesAutomatico:", request);
     return this.http.post<Prova>(`${this.API_URL}/${id}/questoes-automaticas`, request);
   }
 

@@ -2,10 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
-import { Questao } from '../../../models/questao.model';
 import { Router } from '@angular/router';
-import { ProvaService } from '../../../services/prova/prova-service';
+import { Questao } from '../../../models/questao.model';
 import { ProvaManualStateService } from '../../../services/prova-manual-state/prova-manual-state';
+import { ProvaService } from '../../../services/prova/prova-service';
+
 
 interface CardQuestao {
   indice: number;      
@@ -24,8 +25,8 @@ interface CardQuestao {
   styleUrls: ['./gerador-manual.scss']
 })
 export class GeradorManual implements OnInit {
-  
-  objectKeys = Object.keys; 
+
+  objectKeys = Object.keys;
   quantidadeDesejada: number | null = null;
   cards: CardQuestao[] = [];
   topicosDisponiveis: string[] = [];
@@ -42,18 +43,23 @@ export class GeradorManual implements OnInit {
 
   ngOnInit(): void {
     this.provaService.getTopicosDisponiveis().subscribe(t => this.topicosDisponiveis = t);
-
     const estadoSalvo = this.stateService.lerEstado();
-    
     if (estadoSalvo && estadoSalvo.provaId) {
       this.provaId = estadoSalvo.provaId;
       this.quantidadeDesejada = estadoSalvo.quantidadeDesejada;
       this.cards = estadoSalvo.cards;
+      console.log("teste",this.cards[0].questaoPreenchida?.alternativas);
+
       this.isCardsGenerated = true;
       this.stateService.limparEstado(); 
     } else {
       this.provaService.criarProva().subscribe(p => this.provaId = p.id);
     }
+  }
+
+  temAlternativasValidas(alternativas: any): boolean {
+    if (!alternativas) return false;
+    return Object.values(alternativas).some((valor: any) => valor && valor.trim() !== '');
   }
 
   onTrocarMetodoGeracao(card: CardQuestao, metodo: 'IA' | 'BANCO'): void {
@@ -90,7 +96,7 @@ export class GeradorManual implements OnInit {
         indice: i,
         topicoSelecionado: '', 
         usarIA: 'S',          
-        usarBanco: 'N',
+        usarBanco: 'N',       
         questaoPreenchida: null,
         isLoading: false
       });
@@ -98,9 +104,7 @@ export class GeradorManual implements OnInit {
     this.isCardsGenerated = true;
   }
 
-
   onGerarQuestaoCard(card: CardQuestao): void {
-
     if (!card.topicoSelecionado) {
       this.toastr.warning(`Selecione um tópico para a Questão ${card.indice + 1}`);
       return;
@@ -129,7 +133,6 @@ export class GeradorManual implements OnInit {
   onDescartarQuestaoCard(card: CardQuestao): void {
     card.questaoPreenchida = null;
   }
-
 
   onFinalizarProvaManual(): void {
     if (!this.provaId) return;

@@ -18,6 +18,8 @@ export class SelecionarQuestao implements OnInit {
 
   questoes: BancoQuestao[] = [];
   isLoading = false;
+  objectKeys = Object.keys;
+
 
   constructor(
     private bancoService: BancoQuestoesService,

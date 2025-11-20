@@ -23,6 +23,7 @@ export class ProvaManualStateService {
 
   definirQuestaoEscolhida(questao: Questao): void {
     if (this.estado && this.estado.indiceEdicao !== null && this.estado.cards) {
+      console.log("Questao escolhida:", questao);
       this.estado.cards[this.estado.indiceEdicao].questaoPreenchida = questao;
       this.estado.cards[this.estado.indiceEdicao].usarBanco = 'S'; 
       this.estado.cards[this.estado.indiceEdicao].usarIA = 'N';
