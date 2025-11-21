@@ -35,12 +35,23 @@
   <div class="lista-questoes">
     <div class="questao" *ngFor="let questao of prova.questoes; let i = index">
       <h3>{{ i + 1 }}. {{ questao.enunciado }}</h3>
-      <ul *ngIf="questao.alternativas">
+      
+      <ul *ngIf="temAlternativasValidas(questao.alternativas) && isMultiplaEscolha4(questao.alternativas)">
         <li><strong>A)</strong> {{ questao.alternativas['a'] }}</li>
         <li><strong>B)</strong> {{ questao.alternativas['b'] }}</li>
         <li><strong>C)</strong> {{ questao.alternativas['c'] }}</li>
-        <li><strong>D)</strong> {{ questao.alternativas['d'] }}</li>
+        <li><strong>D)</strong> {{ questao.alternativas['d'] }}</li> 
       </ul>
+
+      <ul *ngIf="temAlternativasValidas(questao.alternativas) && !isMultiplaEscolha4(questao.alternativas)">
+        <li><strong>A)</strong> {{ questao.alternativas['a'] }}</li>
+        <li><strong>B)</strong> {{ questao.alternativas['b'] }}</li>
+        <li><strong>C)</strong> {{ questao.alternativas['c'] }}</li>
+        <li><strong>D)</strong> {{ questao.alternativas['d'] }}</li> 
+        <li><strong>E)</strong> {{ questao.alternativas['d'] }}</li> 
+      </ul>
+
+
       <p><strong>Resposta Correta:</strong> {{ questao.respostaCorreta }}</p>
     </div>
   </div>

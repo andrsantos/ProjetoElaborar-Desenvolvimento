@@ -14,9 +14,14 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './provas-salvas.html', 
   styleUrls: ['./provas-salvas.scss']    
 })
+
 export class ProvasSalvas implements OnInit {
   
+  objectKeys = Object.keys;
+
+  
   public provas$!: Observable<ProvaInfo[]>;
+  
 
   constructor(private provaService: ProvaService,
               private notificationService: NotificationService,

@@ -21,6 +21,7 @@ export class DetalheProva implements OnInit {
   public isDownloading = false;
   private provaId: string | null = null; 
 
+
   constructor(
     private provaService: ProvaService,
     private route: ActivatedRoute,
@@ -43,6 +44,21 @@ export class DetalheProva implements OnInit {
     );
   }
 
+  temAlternativasValidas(alternativas: any): boolean {
+    if (!alternativas) return false;
+    return Object.values(alternativas).some((valor: any) => valor && valor.trim() !== '');
+  }
+
+  isMultiplaEscolha4(alternativas: any): boolean {
+    if (!alternativas) return false;
+    const alternativasValidas = Object.values(alternativas).filter((valor: any) => valor && valor.trim() !== '').length;
+    if(alternativasValidas === 4){
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
   openDeleteModal(): void {
     this.isDeleteModalVisible = true;
   }

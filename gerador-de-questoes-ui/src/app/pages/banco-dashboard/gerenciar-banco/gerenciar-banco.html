@@ -19,12 +19,17 @@
 
       <div class="area-alternativas-preview" 
            *ngIf="q.tipo === 'MULTIPLA_ESCOLHA_4' || q.tipo === 'MULTIPLA_ESCOLHA_5'">
-        <ul>
+      
+        <ul *ngFor="let key of objectKeys(q.alternativas)">
           <!-- Itera sobre as chaves (a, b, c, d...) -->
-          <li *ngFor="let key of objectKeys(q.alternativas)">
+        <ng-container *ngIf="q.alternativas[key]">
+          <li>
             <strong>{{ key | uppercase }})</strong> {{ q.alternativas[key] }}
           </li>
+        </ng-container>
+        
         </ul>
+
       </div>
       
       <div class="card-actions">
@@ -57,16 +62,17 @@
         <textarea [(ngModel)]="questaoEmEdicao.enunciado" rows="4"></textarea>
       </div>
 
-      <!-- ALTERNATIVAS (Só se não for Discursiva) -->
+     <!-- ALTERNATIVAS -->
       <div *ngIf="questaoEmEdicao.tipo !== 'DISCURSIVA'" class="area-alternativas">
         <h4>Alternativas</h4>
-        <!-- Loop inteligente pelas chaves do Map (a, b, c, d) -->
-        <div class="input-group" *ngFor="let key of objectKeys(questaoEmEdicao.alternativas)">
-          <span class="prefixo">{{ key | uppercase }})</span>
-          <input [(ngModel)]="questaoEmEdicao.alternativas[key]" type="text">
-        </div>
+        <!-- Itera sobre as chaves -->
+        <ng-container *ngFor="let key of objectKeys(questaoEmEdicao.alternativas)">
+          <div class="input-group" *ngIf="questaoEmEdicao.alternativas[key]">
+            <span class="prefixo">{{ key | uppercase }})</span>
+            <input [(ngModel)]="questaoEmEdicao.alternativas[key]" type="text">
+          </div>
+        </ng-container>
       </div>
-
       <!-- GABARITO -->
       <div class="form-group">
         <label>Resposta Correta:</label>
@@ -76,8 +82,47 @@
                   [(ngModel)]="questaoEmEdicao.respostaCorreta" rows="4"></textarea>
         
         <!-- Se não, usa Input simples (ou poderia ser Select) -->
-        <input *ngIf="questaoEmEdicao.tipo !== 'DISCURSIVA'" 
-               [(ngModel)]="questaoEmEdicao.respostaCorreta" type="text">
+        <!-- <input *ngIf="questaoEmEdicao.tipo === 'VERDADEIRO_F'" 
+               [(ngModel)]="questaoEmEdicao.respostaCorreta" type="text"> -->
+
+
+        <div *ngIf="questaoEmEdicao.tipo === 'VERDADEIRO_FALSO'" class="form-row">
+        <select [(ngModel)]="questaoEmEdicao.respostaCorreta" class="select-gabarito">
+          <option value="" disabled>Selecione...</option>
+          <option value="V">VERDADEIRO</option>
+          <option value="F">FALSO</option>
+        </select>
+      </div>
+
+      
+      <div *ngIf="questaoEmEdicao.tipo === 'MULTIPLA_ESCOLHA_5'" class="form-row">
+      <div class="form-row">
+        <select [(ngModel)]="questaoEmEdicao.respostaCorreta" class="select-gabarito">
+          <option value="" disabled>Selecione...</option>
+          <option value="a">Alternativa A</option>
+          <option value="b">Alternativa B</option>
+          <option value="c">Alternativa C</option>
+          <option value="d">Alternativa D</option>
+          <option value="e">Alternativa E</option>
+        </select>
+      </div>
+      </div>
+
+      <div *ngIf="questaoEmEdicao.tipo === 'MULTIPLA_ESCOLHA_4'" class="form-row">
+      <div class="form-row">
+        <select [(ngModel)]="questaoEmEdicao.respostaCorreta" class="select-gabarito">
+          <option value="" disabled>Selecione...</option>
+          <option value="a">Alternativa A</option>
+          <option value="b">Alternativa B</option>
+          <option value="c">Alternativa C</option>
+          <option value="d">Alternativa D</option>
+        </select>
+      </div>
+      </div>
+
+
+
+
       </div>
     </div>
 

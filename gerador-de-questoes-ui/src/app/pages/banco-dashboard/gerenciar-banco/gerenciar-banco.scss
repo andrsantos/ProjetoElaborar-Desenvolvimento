@@ -82,3 +82,4 @@ h1 { color: var(--cor-secundaria); margin-top: 0; }
 .modal-buttons { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
 .btn-cancelar { background: #6c757d; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; }
 .btn-salvar { background: var(--cor-sucesso); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; }
+.select-gabarito { width: 200px; }
