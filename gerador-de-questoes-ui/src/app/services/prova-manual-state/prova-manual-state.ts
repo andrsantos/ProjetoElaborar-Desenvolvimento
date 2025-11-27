@@ -1,8 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Questao } from '../../models/questao.model';
-import { EstadoProvaManual } from '../../models/estado-prova-manual.model';
 
-
+export interface EstadoProvaManual {
+  provaId: string | null;
+  quantidadeDesejada?: number | null; 
+  cards?: any[]; 
+  indiceEdicao?: number | null; 
+  idQuestaoEdicao?: string | null; 
+  returnUrl?: string; 
+}
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +16,8 @@ import { EstadoProvaManual } from '../../models/estado-prova-manual.model';
 export class ProvaManualStateService {
 
   private estado: EstadoProvaManual | null = null;
+  
+  private questaoTemp: Questao | null = null;
 
   constructor() { }
 
@@ -22,8 +30,8 @@ export class ProvaManualStateService {
   }
 
   definirQuestaoEscolhida(questao: Questao): void {
-    if (this.estado && this.estado.indiceEdicao !== null && this.estado.cards) {
-      console.log("Questao escolhida:", questao);
+    this.questaoTemp = questao;
+    if (this.estado && this.estado.cards && this.estado.indiceEdicao !== null && this.estado.indiceEdicao !== undefined) {
       this.estado.cards[this.estado.indiceEdicao].questaoPreenchida = questao;
       this.estado.cards[this.estado.indiceEdicao].usarBanco = 'S'; 
       this.estado.cards[this.estado.indiceEdicao].usarIA = 'N';
@@ -31,8 +39,15 @@ export class ProvaManualStateService {
     }
   }
 
+  getAndClearQuestaoSelecionada(): Questao | null {
+    const q = this.questaoTemp;
+    this.questaoTemp = null;
+    return q;
+  }
+
   limparEstado(): void {
     this.estado = null;
+    this.questaoTemp = null;
   }
 
   temEstadoSalvo(): boolean {

@@ -1,116 +1,217 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common'; 
+import { FormsModule } from '@angular/forms'; 
 import { ActivatedRoute, RouterLink, Router } from '@angular/router'; 
-import { Observable, switchMap } from 'rxjs';
-import { ProvaSalva } from '../../models/prova-entity.model';
+import { Observable, switchMap, tap } from 'rxjs';
+import { ProvaSalva } from '../../models/prova-entity.model'; 
+import { Questao } from '../../models/questao.model';
+import { ToastrService } from 'ngx-toastr';
 import { ProvaService } from '../../services/prova/prova-service';
 import { NotificationService } from '../../services/notification/notification-service';
+import { ProvaManualStateService } from '../../services/prova-manual-state/prova-manual-state';
 
 @Component({
   selector: 'app-detalhe-prova',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe], 
+  imports: [CommonModule, RouterLink, DatePipe, FormsModule], 
   templateUrl: './detalhe-prova.html', 
   styleUrls: ['./detalhe-prova.scss']    
 })
 export class DetalheProva implements OnInit {
 
   public prova$!: Observable<ProvaSalva>;
+  
   public isDeleteModalVisible = false;
+  public isEditModalVisible = false; 
   public isDeleting = false;
   public isDownloading = false;
-  private provaId: string | null = null; 
+  public isGenerating = false; 
+  public isSavingQuestao = false; 
 
+  private provaId: string | null = null; 
+  
+  public questaoEmEdicao: Questao | null = null; 
+  public topicoParaGerar: string = ''; 
+  
+  public topicosDisponiveis: string[] = [];
+
+  objectKeys = Object.keys;
 
   constructor(
     private provaService: ProvaService,
     private route: ActivatedRoute,
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private toastr: ToastrService,
+    private stateService: ProvaManualStateService 
   ) {}
 
   ngOnInit(): void {
+    this.carregarProva();
+    this.carregarTopicos(); 
+  }
+
+  carregarTopicos() {
+    this.provaService.getTopicosDisponiveis().subscribe(topicos => {
+      this.topicosDisponiveis = topicos;
+    });
+  }
+
+  carregarProva() {
     this.prova$ = this.route.paramMap.pipe(
       switchMap(params => {
         const id = params.get('id');
-        
-        if (!id) {
-          console.error('ID da prova não encontrado na URL');
-          throw new Error('ID da prova não encontrado');
-        }
+        if (!id) throw new Error('ID não encontrado');
         this.provaId = id;
         return this.provaService.getDetalheProva(id);
+      }),
+      tap(prova => {
+        this.verificarRetornoDoBanco(prova);
       })
     );
   }
 
-  temAlternativasValidas(alternativas: any): boolean {
-    if (!alternativas) return false;
-    return Object.values(alternativas).some((valor: any) => valor && valor.trim() !== '');
-  }
+  verificarRetornoDoBanco(prova: ProvaSalva): void {
+    const estado = this.stateService.lerEstado();
+    const questaoDoBanco = this.stateService.getAndClearQuestaoSelecionada();
 
-  isMultiplaEscolha4(alternativas: any): boolean {
-    if (!alternativas) return false;
-    const alternativasValidas = Object.values(alternativas).filter((valor: any) => valor && valor.trim() !== '').length;
-    if(alternativasValidas === 4){
-      return true;
-    } else {
-      return false;
+    if (estado && estado.provaId === this.provaId && estado.idQuestaoEdicao && questaoDoBanco) {
+      const questaoOriginal = prova.questoes.find(q => q.id === estado.idQuestaoEdicao);
+      
+      if (questaoOriginal) {
+        this.abrirModalEdicao(questaoOriginal);
+        
+        if (this.questaoEmEdicao) {
+          this.questaoEmEdicao.enunciado = questaoDoBanco.enunciado;
+          this.questaoEmEdicao.alternativas = questaoDoBanco.alternativas;
+          this.questaoEmEdicao.respostaCorreta = questaoDoBanco.respostaCorreta;
+          this.questaoEmEdicao.topico = questaoDoBanco.topico;
+          
+          this.toastr.info('Questão do banco carregada. Salve para confirmar.');
+        }
+      }
+      this.stateService.limparEstado();
     }
   }
-  
-  openDeleteModal(): void {
-    this.isDeleteModalVisible = true;
+
+  getTipoQuestaoEdicao(): 'M5' | 'M4' | 'VF' | 'DISC' {
+    if (!this.questaoEmEdicao) return 'DISC';
+
+    const alts = this.questaoEmEdicao.alternativas || {};
+    const has = (key: string) => alts[key] && alts[key].trim() !== '';
+
+    if (has('a') && has('b') && has('c') && has('d') && has('e')) return 'M5';
+    if (has('a') && has('b') && has('c') && has('d')) return 'M4';
+
+    const resp = (this.questaoEmEdicao.respostaCorreta || '').toUpperCase().trim();
+    if (resp === 'V' || resp === 'F') return 'VF';
+
+    return 'DISC';
   }
 
-  closeDeleteModal(): void {
-    this.isDeleteModalVisible = false;
+  abrirModalEdicao(questao: Questao): void {
+    this.questaoEmEdicao = JSON.parse(JSON.stringify(questao));
+    this.topicoParaGerar = questao.topico || ''; 
+    this.isEditModalVisible = true;
   }
 
-  onConfirmDelete(): void {
-    if (!this.provaId) return;
+  fecharModalEdicao(): void {
+    this.isEditModalVisible = false;
+    this.questaoEmEdicao = null;
+  }
 
-    this.isDeleting = true; 
-    this.provaService.deleteProva(this.provaId).subscribe({
-      next: () => {
-        this.isDeleting = false;
-        this.isDeleteModalVisible = false;
-        this.notificationService.setMessage('Prova excluída com sucesso!');
-        this.router.navigate(['/provas-salvas']);
+  gerarNovaVersaoIA(): void {
+    if (!this.topicoParaGerar) {
+      this.toastr.warning("Selecione um tópico para gerar.");
+      return;
+    }
+    this.isGenerating = true;
+    
+    this.provaService.gerarQuestaoAvulsa(this.topicoParaGerar, 1).subscribe({
+      next: (res) => {
+        if (res.questoes && res.questoes.length > 0) {
+          const nova = res.questoes[0];
+          if (this.questaoEmEdicao) {
+            this.questaoEmEdicao.enunciado = nova.enunciado;
+            this.questaoEmEdicao.alternativas = nova.alternativas;
+            this.questaoEmEdicao.respostaCorreta = nova.respostaCorreta;
+            this.questaoEmEdicao.topico = this.topicoParaGerar;
+          }
+          this.toastr.success("Nova versão gerada! Salve para confirmar.");
+        }
+        this.isGenerating = false;
       },
-      error: (err) => {
-        console.error('Erro ao excluir prova:', err);
-        alert('Falha ao excluir a prova.');
-        this.isDeleting = false;
-        this.isDeleteModalVisible = false;
+      error: () => {
+        this.toastr.error("Erro ao gerar com IA.");
+        this.isGenerating = false;
       }
     });
+  }
+
+  irAoBanco(): void {
+    if (!this.provaId || !this.questaoEmEdicao?.id) return;
+
+    this.stateService.salvarEstado({
+      provaId: this.provaId,
+      idQuestaoEdicao: this.questaoEmEdicao.id, 
+      returnUrl: `/provas-salvas/${this.provaId}` 
+    });
+
+    this.router.navigate(['/banco-questoes/selecionar-questao']);
+  }
+
+  salvarEdicao(): void {
+    if (!this.questaoEmEdicao || !this.questaoEmEdicao.id) return;
+
+    this.isSavingQuestao = true;
+    this.provaService.atualizarQuestaoExistente(this.questaoEmEdicao.id, this.questaoEmEdicao)
+      .subscribe({
+        next: () => {
+          this.toastr.success("Questão atualizada!");
+          this.isSavingQuestao = false;
+          this.fecharModalEdicao();
+          this.carregarProva(); 
+        },
+        error: () => {
+          this.toastr.error("Erro ao salvar.");
+          this.isSavingQuestao = false;
+        }
+      });
+  }
+
+  temAlternativasValidas(alternativas: any): boolean {
+    if (!alternativas) return false;
+    return Object.values(alternativas).some((v: any) => v && v.trim() !== '');
+  }
+  
+  openDeleteModal(): void { this.isDeleteModalVisible = true; }
+  closeDeleteModal(): void { this.isDeleteModalVisible = false; }
+  
+  onConfirmDelete(): void {
+     if (!this.provaId) return;
+     this.isDeleting = true;
+     this.provaService.deleteProva(this.provaId).subscribe({
+        next: () => {
+           this.notificationService.setMessage('Prova excluída!');
+           this.router.navigate(['/provas-salvas']);
+        },
+        error: () => { this.isDeleting = false; this.isDeleteModalVisible = false; }
+     });
   }
 
   onDownloadPdf(): void {
-    if (!this.provaId) return;
-
-    this.isDownloading = true; 
-    this.provaService.downloadProvaSalvaPdf(this.provaId).subscribe({
-      next: (blob: Blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `prova_salva_${this.provaId}.pdf`; 
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-        
-        this.isDownloading = false; 
-      },
-      error: (err) => {
-        console.error('Erro ao baixar PDF:', err);
-        alert('Falha ao baixar o PDF.');
-        this.isDownloading = false;
-      }
-    });
+     if (!this.provaId) return;
+     this.isDownloading = true;
+     this.provaService.downloadProvaSalvaPdf(this.provaId).subscribe({
+        next: (blob) => {
+           const url = window.URL.createObjectURL(blob);
+           const a = document.createElement('a');
+           a.href = url;
+           a.download = `prova_${this.provaId}.pdf`;
+           a.click();
+           this.isDownloading = false;
+        },
+        error: () => this.isDownloading = false
+     });
   }
-
-
 }

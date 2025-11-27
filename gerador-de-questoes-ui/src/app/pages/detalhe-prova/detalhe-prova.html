@@ -9,20 +9,14 @@
       </p>
     </div>
     
-    <!-- ÁREA DE BOTÕES -->
     <div class="botoes-acao">
-      <!-- BOTÃO DE VOLTAR -->
-      <a [routerLink]="['/provas-salvas']" class="btn-voltar">
-        &larr; Voltar
-      </a>
+      <a [routerLink]="['/provas-salvas']" class="btn-voltar">&larr; Voltar</a>
       
-      <!-- BOTÃO DE DOWNLOAD -->
       <button class="btn-download" (click)="onDownloadPdf()" [disabled]="isDownloading">
         <span *ngIf="!isDownloading">Baixar PDF</span>
         <span *ngIf="isDownloading" class="loader"></span>
       </button>
 
-      <!-- BOTÃO DE EXCLUIR -->
       <button class="btn-excluir" (click)="openDeleteModal()" [disabled]="isDeleting">
         <span *ngIf="!isDeleting">Excluir Prova</span>
         <span *ngIf="isDeleting" class="loader"></span>
@@ -34,23 +28,23 @@
 
   <div class="lista-questoes">
     <div class="questao" *ngFor="let questao of prova.questoes; let i = index">
-      <h3>{{ i + 1 }}. {{ questao.enunciado }}</h3>
       
-      <ul *ngIf="temAlternativasValidas(questao.alternativas) && isMultiplaEscolha4(questao.alternativas)">
-        <li><strong>A)</strong> {{ questao.alternativas['a'] }}</li>
-        <li><strong>B)</strong> {{ questao.alternativas['b'] }}</li>
-        <li><strong>C)</strong> {{ questao.alternativas['c'] }}</li>
-        <li><strong>D)</strong> {{ questao.alternativas['d'] }}</li> 
+      <!-- Header da Questão com botão Editar -->
+      <div class="questao-header">
+        <h3>{{ i + 1 }}. {{ questao.enunciado }}</h3>
+        <button class="btn-editar-questao" (click)="abrirModalEdicao(questao)">
+          Editar
+        </button>
+      </div>
+      
+      <!-- Exibe alternativas se existirem e forem válidas -->
+      <ul *ngIf="temAlternativasValidas(questao.alternativas)">
+        <li *ngFor="let key of objectKeys(questao.alternativas)">
+          <ng-container *ngIf="questao.alternativas[key]">
+            <strong>{{ key | uppercase }})</strong> {{ questao.alternativas[key] }}
+          </ng-container>
+        </li>
       </ul>
-
-      <ul *ngIf="temAlternativasValidas(questao.alternativas) && !isMultiplaEscolha4(questao.alternativas)">
-        <li><strong>A)</strong> {{ questao.alternativas['a'] }}</li>
-        <li><strong>B)</strong> {{ questao.alternativas['b'] }}</li>
-        <li><strong>C)</strong> {{ questao.alternativas['c'] }}</li>
-        <li><strong>D)</strong> {{ questao.alternativas['d'] }}</li> 
-        <li><strong>E)</strong> {{ questao.alternativas['d'] }}</li> 
-      </ul>
-
 
       <p><strong>Resposta Correta:</strong> {{ questao.respostaCorreta }}</p>
     </div>
@@ -62,17 +56,118 @@
   <p>Carregando detalhes da prova...</p>
 </ng-template>
 
+<!-- ========================================== -->
+<!-- MODAL DE EDIÇÃO DE QUESTÃO -->
+<!-- ========================================== -->
+<div class="modal-overlay" *ngIf="isEditModalVisible && questaoEmEdicao">
+  <div class="modal-box modal-large">
+    <h3>Editar Questão</h3>
+    
+    <!-- Painel de Substituição (IA / Banco) -->
+    <div class="painel-geracao">
+      <h4>Substituir Conteúdo</h4>
+      <div class="controles-geracao">
+        
+        <!-- 
+           Substituído input text por SELECT populado com topicosDisponiveis 
+        -->
+        <select [(ngModel)]="topicoParaGerar" class="select-topico">
+          <option value="" disabled selected>Selecione um tópico...</option>
+          <option *ngFor="let t of topicosDisponiveis" [value]="t">{{ t }}</option>
+        </select>
 
+        <button class="btn-ia" (click)="gerarNovaVersaoIA()" [disabled]="isGenerating">
+          <span *ngIf="!isGenerating">Gerar Nova Versão (IA)</span>
+          <span *ngIf="isGenerating" class="loader-small"></span>
+        </button>
+        <span class="ou">ou</span>
+        <button class="btn-banco" (click)="irAoBanco()">Banco de Questões</button>
+      </div>
+    </div>
 
+    <hr>
+
+    <!-- Formulário de Edição Manual -->
+    <div class="form-edicao">
+      <label>Enunciado:</label>
+      <textarea [(ngModel)]="questaoEmEdicao.enunciado" rows="3"></textarea>
+
+      <!-- Alternativas (Editáveis se existirem) -->
+      <div *ngIf="questaoEmEdicao.alternativas" class="alternativas-edicao">
+        <label>Alternativas:</label>
+        
+        <!-- 
+           Itera a,b,c,d,e mas só mostra o input se:
+           1. A chave não for 'e' (mostra sempre a,b,c,d)
+           2. OU se o tipo for 'M5' (mostra 'e' também)
+        -->
+        <ng-container *ngFor="let key of ['a', 'b', 'c', 'd', 'e']">
+          <div class="alt-row" *ngIf="key !== 'e' || getTipoQuestaoEdicao() === 'M5'">
+            <span class="prefixo">{{ key | uppercase }})</span>
+            <input type="text" [(ngModel)]="questaoEmEdicao.alternativas[key]">
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- 
+        GABARITO DINÂMICO 
+        Renderiza o input correto baseado no tipo da questão
+      -->
+      <label style="margin-top: 1rem; display:block; font-weight:bold;">Resposta Correta:</label>
+
+      <!-- Caso 1: Múltipla Escolha (5 Alternativas) -->
+      <select *ngIf="getTipoQuestaoEdicao() === 'M5'" [(ngModel)]="questaoEmEdicao.respostaCorreta">
+        <option value="" disabled>Selecione...</option>
+        <option value="a">Alternativa A</option>
+        <option value="b">Alternativa B</option>
+        <option value="c">Alternativa C</option>
+        <option value="d">Alternativa D</option>
+        <option value="e">Alternativa E</option>
+      </select>
+
+      <!-- Caso 2: Múltipla Escolha (4 Alternativas) -->
+      <select *ngIf="getTipoQuestaoEdicao() === 'M4'" [(ngModel)]="questaoEmEdicao.respostaCorreta">
+        <option value="" disabled>Selecione...</option>
+        <option value="a">Alternativa A</option>
+        <option value="b">Alternativa B</option>
+        <option value="c">Alternativa C</option>
+        <option value="d">Alternativa D</option>
+      </select>
+
+      <!-- Caso 3: Verdadeiro ou Falso -->
+      <select *ngIf="getTipoQuestaoEdicao() === 'VF'" [(ngModel)]="questaoEmEdicao.respostaCorreta">
+        <option value="" disabled>Selecione...</option>
+        <option value="V">Verdadeiro</option>
+        <option value="F">Falso</option>
+      </select>
+
+      <!-- Caso 4: Discursiva (Default) -->
+      <textarea *ngIf="getTipoQuestaoEdicao() === 'DISC'" 
+                [(ngModel)]="questaoEmEdicao.respostaCorreta" 
+                rows="3" 
+                placeholder="Digite o gabarito ou explicação...">
+      </textarea>
+
+    </div>
+
+    <div class="modal-botoes">
+      <button class="btn-modal-cancelar" (click)="fecharModalEdicao()">Cancelar</button>
+      <button class="btn-modal-confirmar" (click)="salvarEdicao()" [disabled]="isSavingQuestao">
+        <span *ngIf="!isSavingQuestao">Salvar Alterações</span>
+        <span *ngIf="isSavingQuestao" class="loader"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Exclusão -->
 <div class="modal-overlay" *ngIf="isDeleteModalVisible">
   <div class="modal-box">
     <h3>Confirmar Exclusão</h3>
-    <p>Você tem certeza que deseja excluir esta prova? Esta ação não pode ser desfeita.</p>
+    <p>Você tem certeza que deseja excluir esta prova?</p>
     <div class="modal-botoes">
-      <button class="btn-modal-cancelar" (click)="closeDeleteModal()" [disabled]="isDeleting">
-        Cancelar
-      </button>
-      <button class="btn-modal-confirmar" (click)="onConfirmDelete()" [disabled]="isDeleting">
+      <button class="btn-modal-cancelar" (click)="closeDeleteModal()">Cancelar</button>
+      <button class="btn-modal-confirmar danger" (click)="onConfirmDelete()" [disabled]="isDeleting">
         <span *ngIf="!isDeleting">Sim, Excluir</span>
         <span *ngIf="isDeleting" class="loader"></span>
       </button>

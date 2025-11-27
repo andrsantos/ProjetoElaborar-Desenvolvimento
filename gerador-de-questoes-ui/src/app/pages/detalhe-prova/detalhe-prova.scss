@@ -1,53 +1,55 @@
 :host {
   display: block;
+  /* Variáveis de cor (caso não estejam globais) */
+  --cor-primaria: #0d6efd;
+  --cor-secundaria: #6c757d;
+  --cor-sucesso: #198754;
+  --cor-perigo: #dc3545;
+  --cor-fundo: #f8f9fa;
+  --cor-cartao: #ffffff;
+  --cor-borda: #dee2e6;
+  --cor-texto: #212529;
+  --raio-borda: 8px;
+  --sombra-cartao: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-h1 {
-  margin-top: 0;
-  color: var(--cor-secundaria);
+/* Header da Página */
+.detalhe-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.subtitle {
-  font-size: 1rem;
-  color: #6c757d;
-  line-height: 1.5;
-}
+h1 { margin: 0; color: var(--cor-secundaria); }
+.subtitle { color: #6c757d; line-height: 1.5; margin: 0; }
 
-/* Estilo do botão "Voltar" */
-.btn-voltar {
+.botoes-acao { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+.btn-voltar, .btn-download, .btn-excluir {
   display: inline-block;
-  padding: 0.75rem 1.25rem;
-  font-size: 1rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
   border: none;
   border-radius: var(--raio-borda);
   cursor: pointer;
-  background-color: var(--cor-secundaria);
-  color: white;
   text-decoration: none;
-  transition: opacity 0.2s ease;
+  color: white;
+  transition: opacity 0.2s;
 }
 
-.btn-voltar:hover {
-  opacity: 0.9;
-}
+.btn-voltar { background-color: var(--cor-secundaria); }
+.btn-download { background-color: var(--cor-primaria); }
+.btn-excluir { background-color: var(--cor-perigo); }
+.btn-voltar:hover, .btn-download:hover, .btn-excluir:hover { opacity: 0.9; }
 
-hr {
-  border: 0;
-  border-top: 1px solid var(--cor-borda);
-  margin-bottom: 2rem;
-}
+hr { border: 0; border-top: 1px solid var(--cor-borda); margin-bottom: 2rem; }
 
-/* --- ESTILOS DAS QUESTÕES (COPIADOS) --- */
-/* Esta parte é crucial para a consistência visual.
-   É o mesmo estilo da página 'gerador-prova'.
-*/
-
-.lista-questoes {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem; /* Espaço entre cada cartão de questão */
-}
+/* Lista de Questões */
+.lista-questoes { display: flex; flex-direction: column; gap: 1.5rem; }
 
 .questao {
   background-color: var(--cor-cartao);
@@ -57,161 +59,119 @@ hr {
   box-shadow: var(--sombra-cartao);
 }
 
-.questao h3 {
-  margin-top: 0;
-  color: var(--cor-texto);
-}
-
-/* Alternativas */
-.questao ul {
-  list-style-type: none;
-  padding-left: 0;
-  margin: 1rem 0;
-}
-
-.questao li {
-  padding: 0.5rem 0;
-  color: #495057; /* Cor de texto um pouco mais suave */
-}
-
-/* Resposta Correta (Verde) */
-.questao p {
-  font-weight: 500;
-  color: var(--cor-sucesso);
-}
-
-.detalhe-header {
+/* Header da Questão (Título + Botão Editar) */
+.questao-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start; /* Alinha no topo */
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap; 
+  align-items: flex-start;
   gap: 1rem;
+  margin-bottom: 0.5rem;
 }
 
-/* Container para os botões de ação */
-.botoes-acao {
-  display: flex;
-  gap: 0.75rem; /* Espaço entre os botões */
-  flex-wrap: wrap; /* Quebra em telas menores */
-}
+.questao-header h3 { margin: 0; font-size: 1.1rem; color: var(--cor-texto); }
 
-/* Botão genérico (base) */
-.botoes-acao button,
-.btn-voltar {
-  display: inline-block;
-  padding: 0.75rem 1.25rem;
-  font-size: 1rem;
-  font-weight: 500;
-  border: none;
-  border-radius: var(--raio-borda);
+.btn-editar-questao {
+  font-size: 0.85rem;
+  padding: 0.3rem 0.8rem;
+  background-color: white;
+  border: 1px solid var(--cor-primaria);
+  color: var(--cor-primaria);
+  border-radius: 4px;
   cursor: pointer;
-  text-decoration: none;
-  transition: opacity 0.2s ease;
-  min-width: 120px; /* Largura mínima */
-  text-align: center;
+  transition: all 0.2s;
 }
-
-.btn-voltar {
-  background-color: var(--cor-secundaria);
+.btn-editar-questao:hover {
+  background-color: var(--cor-primaria);
   color: white;
 }
-.btn-voltar:hover { opacity: 0.9; }
 
-.btn-download {
-  background-color: var(--cor-primaria); /* Azul */
-  color: white;
-}
-.btn-download:hover { opacity: 0.9; }
+.questao ul { list-style-type: none; padding-left: 0; margin: 1rem 0; color: #495057; }
+.questao li { padding: 0.4rem 0; line-height: 1.4; }
+.questao p { font-weight: 500; color: var(--cor-sucesso); }
 
-.btn-excluir {
-  background-color: var(--cor-perigo); /* Vermelho */
-  color: white;
-}
-.btn-excluir:hover { opacity: 0.9; }
-
-/* Loader (copiado do gerador-prova.css) */
-.loader {
-  width: 1.2em;
-  height: 1.2em;
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  border-bottom-color: #ffffff;
-  border-radius: 50%;
-  display: inline-block;
-  box-sizing: border-box;
-  animation: rotation 1s linear infinite;
-  vertical-align: middle;
-  line-height: 1;
-}
-
-@keyframes rotation {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-button:disabled {
-  opacity: 0.7;
-  cursor: wait;
-}
-
-
-/* --- ESTILOS DO MODAL --- */
-
+/* --- MODAL --- */
 .modal-overlay {
-  position: fixed; /* Fica por cima de tudo */
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5); /* Fundo escuro semi-transparente */
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex; justify-content: center; align-items: center;
   z-index: 1000;
 }
 
 .modal-box {
-  background-color: var(--cor-cartao);
-  padding: 2rem;
-  border-radius: var(--raio-borda);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  max-width: 500px;
-  width: 90%;
-  z-index: 1001;
+  background: white; padding: 2rem; border-radius: 8px;
+  width: 90%; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+.modal-large { max-width: 700px; }
+
+.modal-box h3 { margin-top: 0; color: var(--cor-primaria); }
+
+/* Painel de Geração (IA/Banco) */
+.painel-geracao {
+  background-color: #f0f8ff; /* Azul bem claro */
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px dashed var(--cor-primaria);
+  margin-bottom: 1.5rem;
+}
+.painel-geracao h4 { margin: 0 0 0.5rem 0; font-size: 1rem; color: var(--cor-primaria); }
+
+.controles-geracao {
+  display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
 }
 
-.modal-box h3 {
-  margin-top: 0;
-  color: var(--cor-perigo);
+/* Select de Tópico */
+.select-topico {
+  flex-grow: 1;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+  min-width: 150px;
 }
 
-.modal-botoes {
-  margin-top: 1.5rem;
-  display: flex;
-  justify-content: flex-end; /* Alinha botões à direita */
-  gap: 0.75rem;
+.controles-geracao input {
+  flex-grow: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;
+}
+.ou { font-size: 0.9rem; color: #6c757d; padding: 0 0.5rem; }
+
+.btn-ia { background-color: var(--cor-primaria); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+.btn-banco { background-color: #6f42c1; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+
+/* Formulário de Edição */
+.form-edicao label { display: block; font-weight: 500; margin-bottom: 0.3rem; margin-top: 1rem; }
+.form-edicao textarea, .form-edicao input, .form-edicao select {
+  width: 100%; padding: 0.6rem;
+  border: 1px solid #ccc; border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 1rem;
+  font-family: inherit;
 }
 
-.btn-modal-cancelar,
-.btn-modal-confirmar {
-  padding: 0.6rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border: none;
-  border-radius: var(--raio-borda);
-  cursor: pointer;
-}
+.alternativas-edicao { background-color: #f9f9f9; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; border: 1px solid #eee; }
+.alt-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.prefixo { font-weight: bold; width: 20px; text-align: center; color: var(--cor-primaria); }
 
-.btn-modal-cancelar {
-  background-color: var(--cor-secundaria);
-  color: white;
-}
-.btn-modal-cancelar:hover { opacity: 0.9; }
+/* Botões do Modal */
+.modal-botoes { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
+.btn-modal-cancelar { background: #6c757d; color: white; border: none; padding: 0.6rem 1rem; border-radius: 4px; cursor: pointer; }
+.btn-modal-confirmar { background: var(--cor-sucesso); color: white; border: none; padding: 0.6rem 1rem; border-radius: 4px; cursor: pointer; min-width: 100px; }
+.danger { background: var(--cor-perigo); }
 
-.btn-modal-confirmar {
-  background-color: var(--cor-perigo);
-  color: white;
-  min-width: 110px; /* Espaço para o loader */
-  text-align: center;
+/* Loaders */
+.loader-small {
+  display: inline-block; width: 1em; height: 1em;
+  border: 2px solid rgba(255,255,255,0.5);
+  border-bottom-color: #fff; border-radius: 50%;
+  animation: rot 1s linear infinite;
 }
-.btn-modal-confirmar:hover { opacity: 0.9; }
+.loader {
+  width: 1.2em; height: 1.2em;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-bottom-color: #ffffff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: rot 1s linear infinite;
+}
+@keyframes rot { to { transform: rotate(360deg); } }

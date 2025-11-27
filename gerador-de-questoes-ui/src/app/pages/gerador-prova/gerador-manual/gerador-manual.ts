@@ -27,8 +27,8 @@ interface CardQuestao {
 export class GeradorManual implements OnInit {
 
   objectKeys = Object.keys;
-  quantidadeDesejada: number | null = null;
-  cards: CardQuestao[] = [];
+  quantidadeDesejada: number | null | undefined= null;
+  cards: any[] | undefined = [];
   topicosDisponiveis: string[] = [];
   provaId: string | null = null;
   isCardsGenerated = false;
@@ -48,8 +48,6 @@ export class GeradorManual implements OnInit {
       this.provaId = estadoSalvo.provaId;
       this.quantidadeDesejada = estadoSalvo.quantidadeDesejada;
       this.cards = estadoSalvo.cards;
-      console.log("teste",this.cards[0].questaoPreenchida?.alternativas);
-
       this.isCardsGenerated = true;
       this.stateService.limparEstado(); 
     } else {
@@ -136,6 +134,11 @@ export class GeradorManual implements OnInit {
 
   onFinalizarProvaManual(): void {
     if (!this.provaId) return;
+
+    if (!this.cards || this.cards.length === 0) {
+      this.toastr.warning('Nenhum card gerado. Gere cards antes de finalizar a prova.');
+      return;
+    }
 
     const questoesProntas = this.cards
       .filter(c => c.questaoPreenchida !== null)

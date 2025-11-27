@@ -3,7 +3,9 @@ import com.Projeto.GeradorDeQuestoes.dto.Prova;
 import com.Projeto.GeradorDeQuestoes.dto.ProvaInfoDTO;
 import com.Projeto.GeradorDeQuestoes.dto.Questao;
 import com.Projeto.GeradorDeQuestoes.entities.ProvaEntity;
+import com.Projeto.GeradorDeQuestoes.entities.QuestaoProvaEntity;
 import com.Projeto.GeradorDeQuestoes.repositories.ProvaRepository;
+import com.Projeto.GeradorDeQuestoes.repositories.QuestaoProvaRepository;
 import com.Projeto.GeradorDeQuestoes.services.PdfService;
 
 import org.springframework.http.HttpHeaders;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,11 +32,15 @@ public class ProvaSalvaController {
 
     private final ProvaRepository provaRepository;
     private final PdfService pdfService;
+    private final QuestaoProvaRepository questaoProvaRepository;
 
 
-    public ProvaSalvaController(ProvaRepository provaRepository, PdfService pdfService) {
+    public ProvaSalvaController(ProvaRepository provaRepository, 
+        PdfService pdfService,
+        QuestaoProvaRepository questaoProvaRepository) {
         this.provaRepository = provaRepository;
         this.pdfService = pdfService;
+        this.questaoProvaRepository = questaoProvaRepository;
     }
 
     @GetMapping
@@ -55,6 +63,22 @@ public class ProvaSalvaController {
         provaRepository.deleteById(id);
         System.out.println("CONTROLLER: Prova " + id + " excluída.");
         return ResponseEntity.noContent().build(); 
+    }
+
+    @PutMapping("/questoes/{idQuestao}")
+    public ResponseEntity<QuestaoProvaEntity> atualizarQuestao(
+            @PathVariable UUID idQuestao,
+            @RequestBody Questao questaoDto) {
+        
+        return questaoProvaRepository.findById(idQuestao)
+            .map(entity -> {
+                entity.setEnunciado(questaoDto.enunciado());
+                entity.setAlternativas(questaoDto.alternativas());
+                entity.setRespostaCorreta(questaoDto.respostaCorreta());
+                QuestaoProvaEntity saved = questaoProvaRepository.save(entity);
+                return ResponseEntity.ok(saved);
+            })
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}/download-pdf")
@@ -91,6 +115,7 @@ public class ProvaSalvaController {
         
         List<Questao> questoesDto = entity.getQuestoes().stream()
                 .map(qe -> new Questao( 
+                        qe.getId(),
                         qe.getEnunciado(),
                         qe.getAlternativas(),
                         qe.getRespostaCorreta()

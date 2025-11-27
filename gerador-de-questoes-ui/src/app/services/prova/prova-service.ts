@@ -28,6 +28,10 @@ export class ProvaService {
     return this.http.get<Prova>(`${this.API_URL}/${id}`);
   }
 
+  atualizarQuestaoExistente(id: string, questao: Questao): Observable<any> {
+    return this.http.put(`${this.API_URL_SALVAS}/questoes/${id}`, questao);
+  }
+
   adicionarQuestoes(id: string, request: GerarQuestaoRequest): Observable<Prova> {
     return this.http.post<Prova>(`${this.API_URL}/${id}/questoes`, request);
   }
