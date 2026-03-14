@@ -105,13 +105,13 @@ public class PdfService {
                         y = page.getMediaBox().getHeight() - margin; 
                     }
                     
-                    String enunciado = questaoNum + ". " + q.enunciado();
+                    String enunciado = questaoNum + ". " + q.getEnunciado();
                     y = addText(content, x, y, enunciado, fontBold, 12, contentWidth);
 
                     float altX = x + 20; 
                     float altWidth = contentWidth - 20; 
                     
-                    for (Map.Entry<String, String> alt : q.alternativas().entrySet()) {
+                    for (Map.Entry<String, String> alt : q.getAlternativas().entrySet()) {
                         String alternativa = alt.getKey() + ") " + alt.getValue();
                         y = addText(content, altX, y, alternativa, font, 12, altWidth);
                     }

@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -55,15 +54,22 @@ public class GeradorProvaController {
     }
 
     @PostMapping("/{id}/questoes-automaticas")
-    public ResponseEntity<Prova> adicionarQuestoesAutomatico(
+    public ResponseEntity<?> adicionarQuestoesAutomatico(
             @PathVariable UUID id, 
             @RequestBody GeracaoAutomaticaRequest request) {
-        
         try {
+
+            request.getTopicos().forEach( topico -> {
+                System.out.println("-----Quantidade Dificeis------ " + topico.getQuantidadeDificeis());
+                System.out.println("-----Quantidade Médias------ " + topico.getQuantidadeMedias());
+                System.out.println("-----Quantidade Fáceis -------" + topico.getQuantidadeFaceis());
+            });
+            
             Prova prova = provaService.adicionarQuestoesAutomatico(id, request);
             return ResponseEntity.ok(prova);
         } catch (Exception e) {
-            return ResponseEntity.notFound().build(); 
+            e.printStackTrace(); 
+            return ResponseEntity.status(500).body(e.getMessage()); 
         }
     }
     

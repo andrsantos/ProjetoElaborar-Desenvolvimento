@@ -9,9 +9,8 @@ import com.Projeto.GeradorDeQuestoes.dto.TopicoQuantidade;
 import com.Projeto.GeradorDeQuestoes.entities.ProvaEntity;
 import com.Projeto.GeradorDeQuestoes.entities.QuestaoProvaEntity;
 import com.Projeto.GeradorDeQuestoes.repositories.ProvaRepository;
-
+import com.Projeto.GeradorDeQuestoes.repositories.TopicoConfigRepository;
 import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
@@ -31,7 +30,8 @@ public class GeradorProvaService {
 
     public GeradorProvaService(GeradorQuestaoService questaoService, 
     ProvaRepository provaRepository, 
-    PdfService pdfService
+    PdfService pdfService,
+    TopicoConfigRepository configRepository
     ) {
         this.questaoService = questaoService;
         this.provaRepository = provaRepository;
@@ -87,9 +87,9 @@ public class GeradorProvaService {
 
         for (Questao questaoDto : provaEmMemoria.getQuestoes()) {
             QuestaoProvaEntity questaoEntity = new QuestaoProvaEntity();
-            questaoEntity.setEnunciado(questaoDto.enunciado());
-            questaoEntity.setAlternativas(questaoDto.alternativas());
-            questaoEntity.setRespostaCorreta(questaoDto.respostaCorreta());
+            questaoEntity.setEnunciado(questaoDto.getEnunciado());
+            questaoEntity.setAlternativas(questaoDto.getAlternativas());
+            questaoEntity.setRespostaCorreta(questaoDto.getRespostaCorreta());
             
             provaEntity.addQuestao(questaoEntity); 
         }
@@ -107,8 +107,6 @@ public class GeradorProvaService {
 
     public Prova adicionarQuestoesAutomatico(UUID idProva, GeracaoAutomaticaRequest request) {
         
-        System.out.println("Topicos Length" + request.getTopicos().size());
-
         Prova prova = getProva(idProva);
         if (prova == null) {
             throw new RuntimeException("Prova não encontrada!");
@@ -125,7 +123,8 @@ public class GeradorProvaService {
             
             topicosProcessados.add(tp.getTopico());
 
-            GerarQuestaoRequest ragRequest = new GerarQuestaoRequest(tp.getTopico(), tp.getQuantidade());
+            GerarQuestaoRequest ragRequest = new GerarQuestaoRequest(tp.getTopico(), tp.getQuantidade(), 
+            tp.getQuantidadeDificeis(), tp.getQuantidadeMedias(), tp.getQuantidadeFaceis());
             
             ListaQuestoes novasQuestoes = questaoService.gerarQuestoes(ragRequest);
             

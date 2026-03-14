@@ -72,9 +72,9 @@ public class ProvaSalvaController {
         
         return questaoProvaRepository.findById(idQuestao)
             .map(entity -> {
-                entity.setEnunciado(questaoDto.enunciado());
-                entity.setAlternativas(questaoDto.alternativas());
-                entity.setRespostaCorreta(questaoDto.respostaCorreta());
+                entity.setEnunciado(questaoDto.getEnunciado());
+                entity.setAlternativas(questaoDto.getAlternativas());
+                entity.setRespostaCorreta(questaoDto.getRespostaCorreta());
                 QuestaoProvaEntity saved = questaoProvaRepository.save(entity);
                 return ResponseEntity.ok(saved);
             })
@@ -118,7 +118,8 @@ public class ProvaSalvaController {
                         qe.getId(),
                         qe.getEnunciado(),
                         qe.getAlternativas(),
-                        qe.getRespostaCorreta()
+                        qe.getRespostaCorreta(),
+                        qe.getExplicacao()
                 ))
                 .collect(Collectors.toList());
 

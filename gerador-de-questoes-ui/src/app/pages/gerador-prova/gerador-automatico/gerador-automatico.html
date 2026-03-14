@@ -59,18 +59,25 @@
       <div class="topico-item-form" *ngFor="let item of topicosSelecionados; let i = index">
         <div class="topico-item-header">
           <h4>Tópico: {{ item.topico }}</h4>
-          <button (click)="onRemoverTopico(item.topico)" class="btn-remover-topico">
-            &times;
-          </button>
+          <span class="badge-total">{{ item.quantidade }} questões no total</span>
+          <button (click)="onRemoverTopico(item.topico)" class="btn-remover-topico">&times;</button>
         </div>
-        <div class="form-group">
-          <label for="quantidade-{{i}}">Número de Questões:</label>
-          <input 
-            id="quantidade-{{i}}" 
-            type="number" 
-            [(ngModel)]="item.quantidade"
-            min="1"
-          >
+
+        <div class="grid-dificuldades" style="display: flex; gap: 15px; margin-top: 15px;">
+          <div class="form-group">
+            <label>Fáceis</label>
+            <input type="number" [(ngModel)]="item.quantidadeFaceis" (ngModelChange)="atualizarTotal(item)" min="0">
+          </div>
+
+          <div class="form-group">
+            <label>Médias</label>
+            <input type="number" [(ngModel)]="item.quantidadeMedias" (ngModelChange)="atualizarTotal(item)" min="0">
+          </div>
+
+          <div class="form-group">
+            <label>Difíceis</label>
+            <input type="number" [(ngModel)]="item.quantidadeDificeis" (ngModelChange)="atualizarTotal(item)" min="0">
+          </div>
         </div>
       </div>
     </div>

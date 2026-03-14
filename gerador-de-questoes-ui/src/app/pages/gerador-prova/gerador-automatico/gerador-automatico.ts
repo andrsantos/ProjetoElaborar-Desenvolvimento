@@ -57,7 +57,10 @@ export class GeradorAutomatico implements OnInit {
       if (!jaExiste) {
         this.topicosSelecionados.push({
           topico: topico,
-          quantidade: 5
+          quantidade: 5,
+          quantidadeDificeis: 0,
+          quantidadeFaceis: 0,
+          quantidadeMedias: 0
         });
       }
     } else {
@@ -108,7 +111,9 @@ onGerarProvaAutomatica() {
     }
     
     this.isLoadingAdicionar = true; 
-
+    
+    console.log("Topicos selecionados para geração automática:", this.topicosSelecionados);
+    
     this.prova$ = this.provaService.adicionarQuestoesAutomatico(
       this.provaId, 
       this.topicosSelecionados
@@ -184,5 +189,14 @@ onGerarProvaAutomatica() {
       }
     });
   }
+
+  atualizarTotal(item: TopicoQuantidade): void {
+  if (item.quantidadeDificeis < 0) item.quantidadeDificeis = 0;
+  if (item.quantidadeMedias < 0) item.quantidadeMedias = 0;
+  if (item.quantidadeFaceis < 0) item.quantidadeFaceis = 0;
+  item.quantidade = item.quantidadeDificeis + item.quantidadeMedias + item.quantidadeFaceis;
+}
+
+
 
 }
