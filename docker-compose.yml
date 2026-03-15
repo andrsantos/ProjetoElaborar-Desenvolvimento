@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db-questoes:
+    image: pgvector/pgvector:pg16
+    container_name: db-ia-educacional
+    restart: always
+    environment:
+      - POSTGRES_DB=ia_educacional
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=andreysantos12
+    ports:
+      - "5435:5432" 
+    volumes:
+      - pgdata_questoes:/var/lib/postgresql/data
+
+  api-questoes:
+    build: .
+    container_name: api-ia-educacional
+    restart: always
+    ports:
+      - "8082:8080"
+    depends_on:
+      - db-questoes
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db-questoes:5432/ia_educacional
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=andreysantos12
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+  web-questoes:
+    build: ./gerador-de-questoes-ui 
+    container_name: web-ia-educacional
+    restart: always
+    ports:
+      - "82:80" 
+    depends_on:
+      - api-questoes
+
+volumes:
+  pgdata_questoes:
