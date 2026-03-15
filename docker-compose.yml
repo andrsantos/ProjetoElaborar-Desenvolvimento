@@ -15,7 +15,7 @@ services:
       - pgdata_questoes:/var/lib/postgresql/data
 
   api-questoes:
-    build: .
+    build: ./GeradorDeQuestoes
     container_name: api-ia-educacional
     restart: always
     ports:
