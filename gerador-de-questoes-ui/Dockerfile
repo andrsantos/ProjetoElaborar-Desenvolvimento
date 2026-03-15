@@ -9,17 +9,17 @@ RUN npm install
 COPY . .
 
 RUN sed -i 's/"outputMode": "server"/"outputMode": "static"/g' angular.json && \
-    sed -i 's/"prerender": true/"prerender": false/g' angular.json && \
-    sed -i 's/"ssr": true/"ssr": false/g' angular.json && \
-    rm -f src/main.server.ts server.ts
+    sed -i '/"server":/,/}/d' angular.json && \
+    sed -i '/"ssr":/,/}/d' angular.json && \
+    sed -i '/"prerender":/,/}/d' angular.json
 
-RUN npx ng build --configuration production --output-path=/app/build_questoes --ssr false --prerender false
+RUN npx ng build --configuration production --output-path=/app/build_questoes
 
 FROM nginx:stable-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY --from=build-stage /app/build_questoes /usr/share/nginx/html
+COPY --from=build-stage /app/build_questoes/browser /usr/share/nginx/html
 
 EXPOSE 80
 
