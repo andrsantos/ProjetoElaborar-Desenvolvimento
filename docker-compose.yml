@@ -39,3 +39,4 @@ services:
 
 volumes:
   pgdata_questoes:
+  - ./init.sql:/docker-entrypoint-initdb.d/init.sql
