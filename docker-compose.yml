@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db-questoes:
     image: pgvector/pgvector:pg16
@@ -10,9 +8,10 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=andreysantos12
     ports:
-      - "5435:5432" 
+      - "5435:5432"
     volumes:
       - pgdata_questoes:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   api-questoes:
     build: ./GeradorDeQuestoes
@@ -29,14 +28,13 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
 
   web-questoes:
-    build: ./gerador-de-questoes-ui 
+    build: ./gerador-de-questoes-ui
     container_name: web-ia-educacional
     restart: always
     ports:
-      - "82:80" 
+      - "82:80"
     depends_on:
       - api-questoes
 
 volumes:
-  pgdata_questoes:
-  - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  pgdata_questoes: 
