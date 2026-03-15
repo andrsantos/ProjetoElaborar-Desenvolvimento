@@ -8,7 +8,7 @@ RUN npm install
 
 COPY . .
 
-RUN npx ng build --configuration production --output-path=/app/build_questoes --ssr false --prerender false
+RUN npx ng build --configuration production --output-path=/app/build_questoes --prerender false --ssr false
 
 FROM nginx:stable-alpine
 
