@@ -8,7 +8,9 @@ RUN npm install
 
 COPY . .
 
-RUN npx ng build --configuration production --output-path=/app/build_questoes --prerender false --ssr false
+RUN sed -i 's/"outputMode": "server"/"outputMode": "static"/g' angular.json
+
+RUN npx ng build --configuration production --output-path=/app/build_questoes
 
 FROM nginx:stable-alpine
 
