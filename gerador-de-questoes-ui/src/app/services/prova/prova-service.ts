@@ -15,7 +15,7 @@ export class ProvaService {
 
   private readonly API_URL = 'http://localhost:8080/api/provas';
   private readonly API_URL_SALVAS = 'http://localhost:8080/api/provas-salvas';
-  private readonly API_URL_TOPICOS = 'http://localhost:8080/api/topicos'; 
+  private readonly API_URL_TOPICOS = 'http://187.77.240.149:82/api/topicos'; 
   private readonly API_QUESTOES_GERAR = 'http://localhost:8080/api/questoes/gerar'; 
 
   constructor(private http: HttpClient) {}
