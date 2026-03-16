@@ -40,11 +40,10 @@ export class GeradorAutomatico implements OnInit {
   }
   
   toggleDropdown(): void {
-    this.isDropdownOpen = !this.isDropdownOpen;
+        this.isDropdownOpen = !this.isDropdownOpen;
   }
 
   isTopicoSelecionado(topico: string): boolean {
-    this.isDropdownOpen = false;
     return this.topicosSelecionados.some(t => t.topico === topico);
   }
 
