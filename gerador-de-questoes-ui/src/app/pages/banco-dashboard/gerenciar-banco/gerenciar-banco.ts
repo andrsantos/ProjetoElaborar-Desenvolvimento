@@ -16,11 +16,14 @@ export class GerenciarBanco implements OnInit {
 
   questoes: BancoQuestao[] = [];
   isLoading = false;
-
   isEditModalOpen = false;
   questaoEmEdicao: BancoQuestao | null = null;
-  
   objectKeys = Object.keys;
+  isComentarioModalOpen = false;
+  questaoComentario: BancoQuestao | null = null;
+  isCadastroModalOpen = false;
+  novaQuestao: BancoQuestao = this.criarNovaQuestao();
+  isModoEdicao = false;
 
   constructor(
     private bancoService: BancoQuestoesService,
@@ -59,8 +62,9 @@ export class GerenciarBanco implements OnInit {
   }
 
   onAbrirEdicao(questao: BancoQuestao): void {
-    this.questaoEmEdicao = JSON.parse(JSON.stringify(questao));
-    this.isEditModalOpen = true;
+    this.novaQuestao = JSON.parse(JSON.stringify(questao));
+    this.isModoEdicao = true;
+    this.isCadastroModalOpen = true;
   }
 
   onCancelarEdicao(): void {
@@ -79,4 +83,96 @@ export class GerenciarBanco implements OnInit {
       error: () => this.toastr.error('Erro ao atualizar questão.')
     });
   }
+
+  abrirComentarios(questao: BancoQuestao) {
+  this.questaoComentario = questao;
+  this.isComentarioModalOpen = true;
+  }
+
+  fecharComentarios() {
+  this.isComentarioModalOpen = false;
+  this.questaoComentario = null;
+  }
+
+  criarNovaQuestao(): BancoQuestao {
+  return {
+    tipo: "MULTIPLA_ESCOLHA_5",
+    topico: "",
+    enunciado: "",
+    alternativas: {
+      a: "",
+      b: "",
+      c: "",
+      d: "",
+      e: ""
+    },
+    respostaCorreta: "",
+    competencia: "",
+    conceito: "",
+    comentarioTecnico: ""
+  } as BancoQuestao;
+  }
+
+  abrirCadastro() {
+  this.novaQuestao = this.criarNovaQuestao();
+  this.isCadastroModalOpen = true;
+  }
+
+  fecharCadastro() {
+  this.isCadastroModalOpen = false;
+  this.isModoEdicao = false;
+  }
+
+  // cadastrarQuestao() {
+
+  // this.bancoService.cadastrarQuestao(this.novaQuestao)
+  //   .subscribe({
+  //     next: () => {
+  //       this.toastr.success("Questão cadastrada com sucesso!");
+  //       this.fecharCadastro();
+  //       this.carregarQuestoes();
+  //     },
+  //     error: () => {
+  //       this.toastr.error("Erro ao cadastrar questão");
+  //     }
+  //   });
+
+  // }
+
+  salvarQuestao() {
+
+  if (this.isModoEdicao && this.novaQuestao.id) {
+
+    this.bancoService
+      .atualizarQuestao(this.novaQuestao.id, this.novaQuestao)
+      .subscribe({
+        next: () => {
+          this.toastr.success("Questão atualizada com sucesso!");
+          this.fecharCadastro();
+          this.carregarQuestoes();
+        },
+        error: () => {
+          this.toastr.error("Erro ao atualizar questão");
+        }
+      });
+
+  } else {
+
+    this.bancoService
+      .cadastrarQuestao(this.novaQuestao)
+      .subscribe({
+        next: () => {
+          this.toastr.success("Questão cadastrada com sucesso!");
+          this.fecharCadastro();
+          this.carregarQuestoes();
+        },
+        error: () => {
+          this.toastr.error("Erro ao cadastrar questão");
+        }
+      });
+
+  }
+
+  }
+
 }

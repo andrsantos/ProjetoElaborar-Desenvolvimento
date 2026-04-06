@@ -218,3 +218,254 @@ h1 { color: var(--cor-primaria); margin-bottom: 0.5rem; }
 @keyframes rotation {
   0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }
 }
+
+.campo-editavel {
+  position: relative;
+  margin-bottom: 10px;
+
+  &:hover .btn-icon-edit {
+    opacity: 1;
+  }
+}
+
+.btn-icon-edit {
+  opacity: 0.3;
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-left: 8px;
+  transition: opacity 0.2s;
+  
+  &:hover {
+    opacity: 1;
+    color: #0056b3;
+  }
+}
+
+.edit-box {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+
+  .form-control-inline {
+    flex: 1;
+    padding: 5px;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  .btn-save-inline {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-weight: bold;
+    
+    &:hover { background-color: #218838; }
+  }
+}
+
+.form-control-inline-select {
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid #007bff;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.98);
+  background: #ffffff;
+  width: 680px;
+  max-width: 92%;
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  z-index: 1001;
+  animation: modalEnter 0.25s ease;
+}
+
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+
+.modal-body {
+  padding: 22px;
+  line-height: 1.6;
+  color: #374151;
+}
+
+
+.secao {
+  margin-bottom: 24px;
+}
+
+.secao h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2563eb;
+}
+
+.secao p {
+  background: #f9fafb;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  white-space: pre-line;
+}
+
+
+.btn-fechar {
+  border: none;
+  background: #f1f5f9;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn-fechar:hover {
+  background: #e2e8f0;
+  transform: scale(1.05);
+}
+
+
+.modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -55%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.btn-comentarios {
+  background: var(--cor-primaria);
+  color: white;
+}
+
+.btn-comentarios:hover {
+  background: #0b5ed7;
+  transform: translateY(-1px);
+}
+
+
+.acoes-questao {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.acoes-questao button {
+  flex: 1;
+  height: 42px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-descartar {
+  background-color: var(--cor-perigo);
+  color: white;
+}
+
+.btn-descartar:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+.btn-cadastrar-banco {
+  background: var(--cor-sucesso);
+  color: white;
+}
+
+.btn-cadastrar-banco:hover {
+  background: #157347;
+  transform: translateY(-1px);
+}
+
+.acoes-questao button:active {
+  transform: translateY(0);
+}
+
+.btn-cadastrar-banco:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.8;
+}

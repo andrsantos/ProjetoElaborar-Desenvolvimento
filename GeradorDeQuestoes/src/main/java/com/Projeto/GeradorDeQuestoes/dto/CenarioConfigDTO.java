@@ -1,22 +1,21 @@
-package com.Projeto.GeradorDeQuestoes.entities;
+package com.Projeto.GeradorDeQuestoes.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+public class CenarioConfigDTO {
 
-@Entity
-@Table(name = "cenario_config")
-public class CenarioConfigEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String topico;
     private String nivel;
     private String descricao;
-    private String tags; 
 
+    public CenarioConfigDTO() {
+    }
+
+    public CenarioConfigDTO(String topico, String nivel, String descricao) {
+        this.topico = topico;
+        this.nivel = nivel;
+        this.descricao = descricao;
+    }
+    
     public Long getId() {
         return this.id;
     }
@@ -49,11 +48,5 @@ public class CenarioConfigEntity {
         this.descricao = descricao;
     }
 
-    public String getTags() {
-        return this.tags;
-    }
-
-    public void setTags(String tags) {
-        this.tags = tags;
-    }
+    
 }

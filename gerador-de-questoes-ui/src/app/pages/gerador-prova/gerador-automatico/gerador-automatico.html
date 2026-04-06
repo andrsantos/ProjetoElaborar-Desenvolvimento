@@ -93,36 +93,109 @@
   </div>
 
   <!-- RESULTADOS -->
-  <main *ngIf="prova$ | async as prova">
-    <div class="secao-carrinho" *ngIf="prova.questoes.length > 0">
-      <hr class="separador-grande">
-      <h2>3. Questões Adicionadas à Prova ({{ prova.questoes.length }})</h2>
-      
-      <div class="lista-questoes">
-        <div class="questao" *ngFor="let questao of prova.questoes; let i = index">
-          <h3>{{ i + 1 }}. {{ questao.enunciado }}</h3>
-          <ul *ngIf="questao.alternativas">
-            <li><strong>A)</strong> {{ questao.alternativas['a'] }}</li>
-            <li><strong>B)</strong> {{ questao.alternativas['b'] }}</li>
-            <li><strong>C)</strong> {{ questao.alternativas['c'] }}</li>
-            <li><strong>D)</strong> {{ questao.alternativas['d'] }}</li>
-          </ul>
-          <p><strong>Resposta Correta:</strong> {{ questao.respostaCorreta }}</p>
-          
-          <button class="btn-descartar" (click)="onDescartarQuestao(i)" [disabled]="descartandoIndex === i">
-            <span *ngIf="descartandoIndex !== i">Descartar Questão</span>
-            <span *ngIf="descartandoIndex === i" class="loader"></span>
+<main *ngIf="prova$ | async as prova">
+  <div class="secao-carrinho" *ngIf="prova.questoes.length > 0">
+    <hr class="separador-grande">
+    <h2>3. Questões Adicionadas à Prova ({{ prova.questoes.length }})</h2>
+    
+    <div class="lista-questoes">
+      <div class="questao" *ngFor="let questao of prova.questoes; let i = index">
+        
+        <div class="campo-editavel">
+          <h3 *ngIf="!isEditando(i, 'enunciado')">
+            {{ i + 1 }}. {{ questao.enunciado }}
+            <button class="btn-icon-edit" (click)="ativarEdicao(i, 'enunciado')">✎</button>
+          </h3>
+          <div *ngIf="isEditando(i, 'enunciado')" class="edit-box">
+            <textarea [(ngModel)]="questao.enunciado" rows="3" class="form-control-inline"></textarea>
+            <button class="btn-save-inline" (click)="salvarEdicao()">OK</button>
+          </div>
+        </div>
+
+        <ul *ngIf="questao.alternativas">
+          <li *ngFor="let alt of ['a','b','c','d','e']" class="campo-editavel">
+            
+            <div *ngIf="!isEditando(i, alt)">
+              <strong>{{ alt.toUpperCase() }})</strong> {{ questao.alternativas[alt] }}
+              <button class="btn-icon-edit" (click)="ativarEdicao(i, alt)">✎</button>
+            </div>
+
+            <div *ngIf="isEditando(i, alt)" class="edit-box">
+              <input [(ngModel)]="questao.alternativas[alt]" class="form-control-inline">
+              <button class="btn-save-inline" (click)="salvarEdicao()">OK</button>
+            </div>
+            
+          </li>
+        </ul>
+
+        <div class="campo-editavel">
+          <p *ngIf="!isEditando(i, 'resposta')">
+            <strong>Resposta Correta:</strong> {{ questao.respostaCorreta }}
+            <button class="btn-icon-edit" (click)="ativarEdicao(i, 'resposta')">✎</button>
+          </p>
+          <div *ngIf="isEditando(i, 'resposta')" class="edit-box">
+            <label>Gabarito:</label>
+            <select [(ngModel)]="questao.respostaCorreta" class="form-control-inline-select">
+              <option *ngFor="let letra de ['A','B','C','D','E']" [value]="letra">{{ letra }}</option>
+            </select>
+            <button class="btn-save-inline" (click)="salvarEdicao()">OK</button>
+          </div>
+        </div>
+        <div class="acoes-questao">
+        <button class="btn-descartar" (click)="onDescartarQuestao(i)" [disabled]="descartandoIndex === i">
+          <span *ngIf="descartandoIndex !== i">Descartar Questão</span>
+          <span *ngIf="descartandoIndex === i" class="loader"></span>
+        </button>
+
+          <button class="btn-comentarios" (click)="abrirComentarios(questao)">
+            Comentários
           </button>
+
+          <button class="btn-cadastrar-banco" (click)="cadastrarQuestao(questao,i)"
+           [disabled]="questoesCadastradas.has(i)">
+          {{ questoesCadastradas.has(i) ? 'Questão já cadastrada' : 'Cadastrar no Banco' }}          
+        </button>
         </div>
       </div>
     </div>
 
-    <footer *ngIf="prova.questoes.length > 0" class="rodape-prova">
-      <hr>
-      <button class="btn-finalizar" (click)="onFinalizarProva()" [disabled]="isLoadingFinalizar">
-        <span *ngIf="!isLoadingFinalizar">4. Salvar e Gerar PDF da Prova</span>
-        <span *ngIf="isLoadingFinalizar" class="loader"></span>
-      </button>
-    </footer>
+    <footer class="rodape-prova">
+        <hr>
+        <button class="btn-finalizar" (click)="onFinalizarProva()" [disabled]="isLoadingFinalizar">
+          <span *ngIf="!isLoadingFinalizar">4. Salvar e Gerar PDF da Prova</span>
+          <span *ngIf="isLoadingFinalizar" class="loader"></span>
+        </button>
+      </footer>
+      
+  </div>
   </main>
+
+
+  <!-- MODAL COMENTÁRIOS -->
+  <div class="modal-backdrop" *ngIf="modalAberta" (click)="fecharModal()"></div>
+
+  <div class="modal" *ngIf="modalAberta">
+    
+    <div class="modal-header">
+      <h2>Comentários Técnicos</h2>
+      <button class="btn-fechar" (click)="fecharModal()">✖</button>
+    </div>
+
+    <div class="modal-body" *ngIf="questaoSelecionada">
+      
+      <div class="secao">
+        <h3>Competência Avaliada</h3>
+        <p>{{ questaoSelecionada.competencia }}</p>
+      </div>
+
+      <div class="secao">
+        <h3>Comentário Técnico</h3>
+        <p>{{ questaoSelecionada.comentarioTecnico }}</p>
+      </div>
+
+    </div>
+
+  </div>
+
+
 </div>

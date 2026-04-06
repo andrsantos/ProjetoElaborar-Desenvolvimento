@@ -8,6 +8,16 @@ import { CommonModule } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
 import { TopicoQuantidade } from '../../../models/topico-quantidade.model';
 import { shareReplay } from 'rxjs/operators';
+import { BancoQuestoesService } from '../../../services/banco-questoes/banco-questoes';
+import { BancoQuestao } from '../../../models/banco-questao.model';
+
+
+export type CampoEdicao = 'enunciado' | 'resposta' | 'a' | 'b' | 'c' | 'd' | 'e';
+
+export interface EstadoEdicao {
+  indexQuestao: number;
+  campo: CampoEdicao;
+}
 
 @Component({
   selector: 'app-gerador-prova',
@@ -16,8 +26,10 @@ import { shareReplay } from 'rxjs/operators';
   styleUrl: './gerador-automatico.scss',
   standalone: true
 })
-export class GeradorAutomatico implements OnInit {
 
+
+export class GeradorAutomatico implements OnInit {
+  
   public topicosDisponiveis: string[] = [];
   public topicosSelecionados: TopicoQuantidade[] = [];
   public isDropdownOpen = false;
@@ -29,8 +41,15 @@ export class GeradorAutomatico implements OnInit {
   isLoadingAdicionar = false;
   isLoadingFinalizar = false;
   descartandoIndex: number | null = null;
+  public editando: EstadoEdicao | null = null;
+  modalAberta = false;
+  questaoSelecionada: any = null;
+  questoesCadastradas = new Set<number>();
 
-  constructor(private provaService: ProvaService, private toastr: ToastrService) { }
+
+  constructor(private provaService: ProvaService, private toastr: ToastrService,
+    private bancoQuestoesService: BancoQuestoesService
+  ) { }
 
   ngOnInit(): void {
     this.onCriarProva();
@@ -86,23 +105,23 @@ export class GeradorAutomatico implements OnInit {
   //   );
   // }
 
-onCriarProva() {
+  onCriarProva() {
 
-    this.isLoadingCriar = true; 
-    this.prova$ = this.provaService.criarProva().pipe(
-      shareReplay(1) 
-    );
+      this.isLoadingCriar = true; 
+      this.prova$ = this.provaService.criarProva().pipe(
+        shareReplay(1) 
+      );
 
-    this.prova$.subscribe({
-      next: p => {
-        this.provaId = p.id;
-        this.isLoadingCriar = false; 
-      },
-      error: () => this.isLoadingCriar = false 
-    });
-  }
+      this.prova$.subscribe({
+        next: p => {
+          this.provaId = p.id;
+          this.isLoadingCriar = false; 
+        },
+        error: () => this.isLoadingCriar = false 
+      });
+    }
 
-onGerarProvaAutomatica() {
+  onGerarProvaAutomatica() {
 
     if (!this.provaId || this.topicosSelecionados.length === 0) {
       alert("Por favor, adicione pelo menos um tópico."); 
@@ -126,6 +145,11 @@ onGerarProvaAutomatica() {
       },
       error: () => this.isLoadingAdicionar = false
     });
+
+   this.prova$.forEach(prova => {
+      console.log("Prova atualizada após geração automática:", prova.questoes);
+    });
+
   }
 
   // onAdicionarQuestoes() {
@@ -194,7 +218,73 @@ onGerarProvaAutomatica() {
   if (item.quantidadeMedias < 0) item.quantidadeMedias = 0;
   if (item.quantidadeFaceis < 0) item.quantidadeFaceis = 0;
   item.quantidade = item.quantidadeDificeis + item.quantidadeMedias + item.quantidadeFaceis;
-}
+  }
+
+  ativarEdicao(index: number, campo: string): void {
+    this.editando = { indexQuestao: index, campo: campo as CampoEdicao };
+  }
+
+  isEditando(index: number, campo: string): boolean {
+    return this.editando?.indexQuestao === index && this.editando?.campo === campo;
+  }
+  salvarEdicao(): void {
+    this.editando = null;
+    this.toastr.info("Alteração salva localmente.");
+  }
+  abrirComentarios(questao: any) {
+  this.questaoSelecionada = questao;
+  this.modalAberta = true;
+  }
+  fecharModal() {
+  this.modalAberta = false;
+  this.questaoSelecionada = null;
+  }
+
+  cadastrarQuestao(questao: any, index: number) {
+
+    const bancoQuestao = this.converterParaBancoQuestao(questao);
+
+    this.bancoQuestoesService.cadastrarQuestao(bancoQuestao)
+      .subscribe({
+        next: () => {
+          this.questoesCadastradas.add(index);
+          console.log("Questões cadastradas", this.questoesCadastradas);
+          this.toastr.success("Questão cadastrada no banco!", "Sucesso");
+        },
+        error: (err) => {
+          console.error("Erro ao cadastrar questão:", err);
+          this.toastr.error("Erro ao cadastrar questão", "Erro");
+        }
+      });
+  }
+
+  converterParaBancoQuestao(questao: any): BancoQuestao {
+
+  return {
+    topico: questao.topico || "Geral",
+
+    enunciado: questao.enunciado,
+
+    tipo: "MULTIPLA_ESCOLHA_5",
+
+    alternativas: {
+      a: questao.alternativas?.a,
+      b: questao.alternativas?.b,
+      c: questao.alternativas?.c,
+      d: questao.alternativas?.d,
+      e: questao.alternativas?.e
+    },
+
+    respostaCorreta: questao.respostaCorreta,
+
+    conceito: questao.conceito || "",
+
+    comentarioTecnico: questao.comentarioTecnico || "",
+
+    competencia: questao.competencia || ""
+  };
+
+  }
 
 
 

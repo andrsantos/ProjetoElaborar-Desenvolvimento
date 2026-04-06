@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "topico_config")
 public class TopicoConfigEntity {
-@Id
+    @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id; 
 

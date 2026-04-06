@@ -1,46 +1,30 @@
 package com.Projeto.GeradorDeQuestoes.dto;
+
 import java.util.Map;
 
-public class Questao
+public class QuestaoDTO {
 
-{
-    String id;
     String enunciado;
     Map<String, String> alternativas; 
     String respostaCorreta;
     String explicacao;
-    String feedbackJulgador;
     String conceito;
     String competencia;
     String comentarioTecnico;
     String topico;
 
 
-
-    public Questao(String id, String enunciado, Map<String,String> alternativas, String respostaCorreta, String explicacao    ) {
-        this.id = id;
+    public QuestaoDTO(String enunciado, Map<String,String> alternativas, String respostaCorreta, String explicacao, String conceito, String competencia, String comentarioTecnico) {
         this.enunciado = enunciado;
         this.alternativas = alternativas;
         this.respostaCorreta = respostaCorreta;
         this.explicacao = explicacao;
-    }
-    
-
-    public String getExplicacao() {
-        return this.explicacao;
+        this.conceito = conceito;
+        this.competencia = competencia;
+        this.comentarioTecnico = comentarioTecnico;
     }
 
-    public void setExplicacao(String explicacao) {
-        this.explicacao = explicacao;
-    }
 
-    public String getId() {
-        return this.id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getEnunciado() {
         return this.enunciado;
@@ -66,12 +50,12 @@ public class Questao
         this.respostaCorreta = respostaCorreta;
     }
 
-    public String getFeedbackJulgador() {
-        return this.feedbackJulgador;
+    public String getExplicacao() {
+        return this.explicacao;
     }
 
-    public void setFeedbackJulgador(String feedbackJulgador) {
-        this.feedbackJulgador = feedbackJulgador;
+    public void setExplicacao(String explicacao) {
+        this.explicacao = explicacao;
     }
 
     public String getConceito() {
@@ -81,7 +65,6 @@ public class Questao
     public void setConceito(String conceito) {
         this.conceito = conceito;
     }
-
 
     public String getCompetencia() {
         return this.competencia;
@@ -99,7 +82,6 @@ public class Questao
         this.comentarioTecnico = comentarioTecnico;
     }
 
-
     public String getTopico() {
         return this.topico;
     }
@@ -107,9 +89,7 @@ public class Questao
     public void setTopico(String topico) {
         this.topico = topico;
     }
+
+
     
-
-
-
-
 }

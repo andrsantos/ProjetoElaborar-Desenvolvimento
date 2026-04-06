@@ -1,0 +1,304 @@
+<div class="admin-container">
+  <h2>Painel de Gerenciamento de Banco</h2>
+  <p>Selecione a base de dados que deseja visualizar ou editar:</p>
+
+  <form [formGroup]="managementForm" (ngSubmit)="onSearch()">
+    <div class="selection-group">
+      <label>
+        <input type="radio" formControlName="tableType" value="documentation">
+        Documentação
+      </label>
+      <label>
+        <input type="radio" formControlName="tableType" value="scenarios">
+        Cenários
+      </label>
+      <label>
+        <input type="radio" formControlName="tableType" value="prompts">
+        Prompts
+      </label>
+    </div>
+    <button type="submit" [disabled]="!managementForm.valid" class="btn-search">
+      Pesquisar Registros
+    </button>
+  </form>
+
+  <div class="results-area" *ngIf="searchPerformed">
+
+    <!-- Tabela de Cenários -->
+    <div *ngIf="managementForm.get('tableType')?.value === 'scenarios'">
+      <div class="filters-container">
+        <div class="filter-group">
+          <label>Tópico:</label>
+          <input type="text" [(ngModel)]="filtroTopico" (input)="onFiltroChange()" placeholder="Filtrar tópico...">
+        </div>
+        <div class="filter-group">
+          <label>Nível:</label>
+          <select [(ngModel)]="filtroNivel" (change)="onFiltroChange()">
+            <option value="">Todos</option>
+            <option value="FACIL">Fácil</option>
+            <option value="MEDIO">Médio</option>
+            <option value="DIFICIL">Difícil</option>
+          </select>
+        </div>
+        <button type="button" class="btn-clear" (click)="limparFiltros()">Limpar</button>
+      </div>
+
+      <div class="table-header-actions">
+        <span>Encontrados: <strong>{{ listaCenariosFiltrada.length }}</strong></span>
+        <button type="button" class="btn-insert" (click)="abrirModalInsercao()">
+          <i class="fas fa-plus"></i> Novo Cenário
+        </button>
+      </div>
+
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Tópico</th>
+            <th>Nível</th>
+            <th>Descrição</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cenario of listaCenariosPaginada">
+            <td>{{ cenario.topico }}</td>
+            <td><span class="badge" [ngClass]="cenario.nivel.toLowerCase()">{{ cenario.nivel }}</span></td>
+            <td class="text-left">{{ cenario.descricao }}</td>
+            <td class="actions-cell">
+              <button class="btn-edit-small" (click)="abrirModalEdicao(cenario)"><i class="fas fa-edit"></i></button>
+              <button class="btn-delete-small" (click)="abrirModalDelecao(cenario)"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pagination-controls">
+        <button (click)="mudarPagina(false)" [disabled]="paginaAtual === 1">Anterior</button>
+        <span>Página <strong>{{ paginaAtual }}</strong> de {{ totalPaginas }}</span>
+        <button (click)="mudarPagina(true)" [disabled]="paginaAtual === totalPaginas">Próxima</button>
+      </div>
+    </div>
+
+    <!-- Tabela de Prompts -->
+    <div *ngIf="managementForm.get('tableType')?.value === 'prompts'">
+      <div class="filters-container">
+        <div class="filter-group">
+          <label>Filtrar Tópico:</label>
+          <input type="text" [(ngModel)]="filtroTopico" (input)="onFiltroChange()" placeholder="Ex: Transporte...">
+        </div>
+        <div class="filter-group">
+          <label>Nível:</label>
+          <select [(ngModel)]="filtroNivel" (change)="onFiltroChange()">
+            <option value="">Todos os Níveis</option>
+            <option value="FACIL">Fácil</option>
+            <option value="MEDIO">Médio</option>
+            <option value="DIFICIL">Difícil</option>
+          </select>
+        </div>
+        <button type="button" class="btn-clear" (click)="limparFiltros()">Limpar Filtros</button>
+      </div>
+
+      <div class="table-header-actions">
+        <span>Encontrados: <strong>{{ listaPromptsFiltrada.length }}</strong> registros</span>
+        <button type="button" class="btn-insert" (click)="abrirModalInsercaoPrompt()">
+          <i class="fas fa-plus-circle"></i> Novo Prompt
+        </button>
+      </div>
+
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Tópico</th>
+            <th>Nível</th>
+            <th>Instruções</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let prompt of listaPromptsPaginada">
+            <td>
+              <span *ngIf="idPromptEditando !== prompt.id">{{ prompt.topico }}</span>
+              <input *ngIf="idPromptEditando === prompt.id" type="text" [(ngModel)]="promptTemporario.topico" class="inline-input">
+            </td>
+            <td>
+              <span *ngIf="idPromptEditando !== prompt.id" class="badge" [ngClass]="prompt.nivel.toLowerCase()">{{ prompt.nivel }}</span>
+              <select *ngIf="idPromptEditando === prompt.id" [(ngModel)]="promptTemporario.nivel" class="inline-select">
+                <option value="FACIL">Fácil</option>
+                <option value="MEDIO">Médio</option>
+                <option value="DIFICIL">Difícil</option>
+              </select>
+            </td>
+            <td>
+              <button class="btn-show-prompt" (click)="visualizarPrompt(idPromptEditando === prompt.id ? promptTemporario : prompt)">
+                <i class="fas" [ngClass]="idPromptEditando === prompt.id ? 'fa-edit' : 'fa-eye'"></i>
+                {{ idPromptEditando === prompt.id ? ' Editar Texto' : ' Ver Prompt' }}
+              </button>
+            </td>
+            <td class="actions-cell">
+              <div *ngIf="idPromptEditando !== prompt.id">
+                <button class="btn-edit-small" (click)="iniciarEdicaoPrompt(prompt)" title="Editar"><i class="fas fa-pencil-alt"></i></button>
+                <button class="btn-delete-small" (click)="deletarPrompt(prompt.id)" title="Excluir"><i class="fas fa-trash"></i></button>
+              </div>
+              <div *ngIf="idPromptEditando === prompt.id">
+                <button class="btn-save-inline" (click)="salvarEdicaoInline()" title="Salvar"><i class="fas fa-check"></i></button>
+                <button class="btn-cancel-inline" (click)="cancelarEdicao()" title="Cancelar"><i class="fas fa-times"></i></button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pagination-controls">
+        <button (click)="mudarPagina(false)" [disabled]="paginaAtual === 1">Anterior</button>
+        <span>Página <strong>{{ paginaAtual }}</strong> de {{ totalPaginas }}</span>
+        <button (click)="mudarPagina(true)" [disabled]="paginaAtual === totalPaginas">Próxima</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Inserção de Cenário -->
+  <div class="modal-overlay" *ngIf="showInsertModal" (click)="fecharModalInsercao()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header insert-header">
+        <h3><i class="fas fa-plus-circle"></i> Novo Cenário</h3>
+        <button class="btn-close" (click)="fecharModalInsercao()">×</button>
+      </div>
+
+      <form [formGroup]="insertCenarioForm" (ngSubmit)="submeterInsercao()" class="modal-form">
+        <div class="form-group">
+          <label>Tópico:</label>
+          <input type="text" formControlName="topico" placeholder="Ex: Camada de Rede">
+        </div>
+
+        <div class="form-group">
+          <label>Nível:</label>
+          <select formControlName="nivel">
+            <option value="" disabled>Selecione...</option>
+            <option value="FACIL">Fácil</option>
+            <option value="MEDIO">Médio</option>
+            <option value="DIFICIL">Difícil</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Descrição:</label>
+          <textarea formControlName="descricao" rows="4" placeholder="Descreva o cenário..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="fecharModalInsercao()">Cancelar</button>
+          <button type="submit" class="btn-save" [disabled]="insertCenarioForm.invalid">
+            <i class="fas fa-save"></i> Salvar Cenário
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Deleção de Cenário -->
+  <div class="modal-overlay" *ngIf="showDeleteModal" (click)="fecharModalDelecao()">
+    <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header delete-header">
+        <h3>Confirmar Exclusão</h3>
+        <button class="btn-close" (click)="fecharModalDelecao()">×</button>
+      </div>
+      <div class="modal-body">
+        <p>Deseja apagar permanentemente este cenário?</p>
+        <div class="record-preview" *ngIf="cenarioParaDeletar">
+          <p><strong>Tópico:</strong> {{ cenarioParaDeletar.topico }}</p>
+          <p><strong>Descrição:</strong> {{ cenarioParaDeletar.descricao }}</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="fecharModalDelecao()">Cancelar</button>
+        <button type="button" class="btn-confirm-delete" (click)="confirmarExclusao()">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Edição de Cenário -->
+  <div class="modal-overlay" *ngIf="showEditModal" (click)="fecharModalEdicao()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Editar Cenário</h3>
+        <button class="btn-close" (click)="fecharModalEdicao()">×</button>
+      </div>
+      <form [formGroup]="editCenarioForm" (ngSubmit)="submeterEdicao()" class="modal-form">
+        <div class="form-group">
+          <label>Tópico:</label>
+          <input type="text" formControlName="topico">
+        </div>
+        <div class="form-group">
+          <label>Nível:</label>
+          <select formControlName="nivel">
+            <option value="FACIL">Fácil</option>
+            <option value="MEDIO">Médio</option>
+            <option value="DIFICIL">Difícil</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Descrição:</label>
+          <textarea formControlName="descricao" rows="4"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="fecharModalEdicao()">Cancelar</button>
+          <button type="submit" class="btn-save" [disabled]="editCenarioForm.invalid">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Edição de Prompt -->
+  <div class="modal-overlay" *ngIf="showPromptModal" (click)="showPromptModal = false">
+    <div class="modal-content prompt-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Instruções: {{ (idPromptEditando ? promptTemporario : promptSelecionado)?.topico }}</h3>
+        <button class="btn-close" (click)="showPromptModal = false">×</button>
+      </div>
+      <div class="modal-body">
+        <pre *ngIf="!idPromptEditando" class="prompt-text">{{ promptSelecionado?.instrucoesEspecificas }}</pre>
+        <textarea *ngIf="idPromptEditando" [(ngModel)]="promptTemporario.instrucoesEspecificas" class="prompt-edit-area" rows="15"></textarea>
+      </div>
+      <div class="modal-footer" *ngIf="idPromptEditando">
+        <button class="btn-save" (click)="showPromptModal = false">Confirmar Alteração de Texto</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Inserção de Prompt -->
+  <div class="modal-overlay" *ngIf="showInsertPromptModal" (click)="fecharModalInsercaoPrompt()">
+    <div class="modal-content prompt-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header insert-header">
+        <h3><i class="fas fa-magic"></i> Cadastrar Novo Prompt</h3>
+        <button class="btn-close" (click)="fecharModalInsercaoPrompt()">×</button>
+      </div>
+
+      <form [formGroup]="insertPromptForm" (ngSubmit)="submeterInsercaoPrompt()" class="modal-form">
+        <div class="form-group">
+          <label>Tópico Principal:</label>
+          <input type="text" formControlName="topico" placeholder="Ex: Camada de Aplicação">
+        </div>
+        <div class="form-group">
+          <label>Nível de Dificuldade:</label>
+          <select formControlName="nivel">
+            <option value="" disabled>Selecione...</option>
+            <option value="FACIL">Fácil</option>
+            <option value="MEDIO">Médio</option>
+            <option value="DIFICIL">Difícil</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Corpo das Instruções (System Prompt):</label>
+          <textarea formControlName="instrucoesEspecificas" rows="12" class="prompt-edit-area" placeholder="Cole aqui as instruções..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="fecharModalInsercaoPrompt()">Cancelar</button>
+          <button type="submit" class="btn-save" [disabled]="insertPromptForm.invalid">
+            <i class="fas fa-save"></i> Salvar Prompt
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>

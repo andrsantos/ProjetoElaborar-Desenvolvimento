@@ -1,5 +1,6 @@
 package com.Projeto.GeradorDeQuestoes.services.impl;
 
+import com.Projeto.GeradorDeQuestoes.dto.AvaliacaoQuestao;
 import com.Projeto.GeradorDeQuestoes.dto.GerarQuestaoRequest;
 import com.Projeto.GeradorDeQuestoes.dto.ListaQuestoes;
 import com.Projeto.GeradorDeQuestoes.dto.Questao;
@@ -8,12 +9,16 @@ import com.Projeto.GeradorDeQuestoes.entities.TopicoConfigEntity;
 import com.Projeto.GeradorDeQuestoes.repositories.CenarioConfigRepository;
 import com.Projeto.GeradorDeQuestoes.repositories.TopicoConfigRepository;
 import com.Projeto.GeradorDeQuestoes.services.GeradorQuestaoService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -23,19 +28,24 @@ import java.util.stream.Collectors;
 @Service
 public class GeradorQuestaoServiceImpl implements GeradorQuestaoService {
 
-    private final ChatClient chatClient;
+    private final ChatClient openAiChatClient;
+    private final ChatClient anthropicChatClient;
     private final VectorStore vectorStore;
     private final TopicoConfigRepository topicoConfigRepository;
     private final CenarioConfigRepository cenarioConfigRepository;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    public GeradorQuestaoServiceImpl(ChatClient.Builder chatClientBuilder,
+    public GeradorQuestaoServiceImpl(@Qualifier("openAiChatClient") ChatClient openAiChatClient,
                                      VectorStore vectorStore,
                                      TopicoConfigRepository configRepository,
-                                     CenarioConfigRepository cenarioConfigRepository) {
-        this.chatClient = chatClientBuilder.build();
+                                     CenarioConfigRepository cenarioConfigRepository,
+                                     @Qualifier("anthropicChatClient") ChatClient anthropicChatClient) {
+        this.openAiChatClient = openAiChatClient;
+        this.anthropicChatClient = anthropicChatClient;
         this.vectorStore = vectorStore;
-        this.topicoConfigRepository = configRepository;
-        this.cenarioConfigRepository = cenarioConfigRepository;
+            this.topicoConfigRepository = configRepository;
+            this.cenarioConfigRepository = cenarioConfigRepository;
     }
 
     @Override
@@ -48,60 +58,84 @@ public class GeradorQuestaoServiceImpl implements GeradorQuestaoService {
     }
 
     private List<Questao> gerarBlocoPorNivel(String nomeTopico, String nivel, int quantidadeSolicitada) {
-        List<Questao> blocoFinal = new ArrayList<>();
-        Random random = new Random();
-        TopicoConfigEntity config = topicoConfigRepository.findByTopicoAndNivel(nomeTopico, nivel)
-                .orElseThrow(() -> new RuntimeException("Configuração não encontrada"));
+    List<Questao> blocoFinal = new ArrayList<>();
+    Random random = new Random();
+    TopicoConfigEntity config = topicoConfigRepository.findByTopicoAndNivel(nomeTopico, nivel)
+            .orElseThrow(() -> new RuntimeException("Configuração não encontrada"));
 
-        String contextoTecnico = recuperarContextoDoBanco(nomeTopico, nivel);
-        
-        List<String> conceitosParaUsar = extrairConceitosUnicos(contextoTecnico, nivel, 15);
-        System.out.println("DEBUG: Conceitos únicos detectados: " + conceitosParaUsar.size());
+    String contextoTecnico = recuperarContextoDoBanco(nomeTopico);
+    List<String> conceitosParaUsar = extrairConceitosUnicos(contextoTecnico, nivel, 20);
+    Collections.shuffle(conceitosParaUsar, random);
 
-        List<String> listaContextos = cenarioConfigRepository.findByTopicoAndNivel(nomeTopico, nivel).stream()
-                .map(CenarioConfigEntity::getDescricao).collect(Collectors.toList());
-        if (listaContextos.isEmpty()) listaContextos = List.of("Cenário de rede corporativa");
+    List<String> listaContextos = cenarioConfigRepository.findByTopicoAndNivel(nomeTopico, nivel).stream()
+            .map(CenarioConfigEntity::getDescricao).collect(Collectors.toList());
+    if (listaContextos.isEmpty()) listaContextos = List.of("Cenário de rede corporativa");
 
-        int tentativaConceito = 0;
+    int tentativaConceito = 0;
 
     while (blocoFinal.size() < quantidadeSolicitada && tentativaConceito < conceitosParaUsar.size()) {
         String conceitoAtual = conceitosParaUsar.get(tentativaConceito);
+        String contextoDoConceito = recuperarContextoDoBanco(conceitoAtual);
         Questao questaoFinal = null;
         int subTentativas = 0;
-        String cenarioSorteado = listaContextos.get(random.nextInt(listaContextos.size()));
+        String questaoRaw = null;
 
-        while (questaoFinal == null && subTentativas < 2) { 
+        while (questaoFinal == null && subTentativas < 3) {
             try {
-                String enunciadoRaw = chamarAgenteEscritor(nomeTopico, nivel, contextoTecnico, config, conceitoAtual, cenarioSorteado);
-                System.out.println("DEBUG: Enunciado gerado: " + enunciadoRaw);
-                String questaoCompletaRaw = chamarAgenteAlternativas(enunciadoRaw, contextoTecnico, conceitoAtual, nivel);
-                System.out.println("DEBUG: Questão completa gerada: " + questaoCompletaRaw);
-                List<Questao> listaRascunho = parsearRespostaTags(questaoCompletaRaw);
-                
-                if (!listaRascunho.isEmpty()) {
-                    questaoFinal = listaRascunho.get(0);
+                if (questaoRaw == null) {
+                    System.out.println("Gerando questão para conceito: " + conceitoAtual);
+                    questaoRaw = chamarAgenteEscritor(nomeTopico, nivel, contextoDoConceito, config, conceitoAtual);
+                    System.out.println("DEBUG: Questão gerada: " + questaoRaw);
                 }
-            } catch (Exception e) { 
-                System.err.println("Erro na geração [" + conceitoAtual + "]: " + e.getMessage()); 
+
+                List<Questao> listaRascunho = parsearRespostaTags(questaoRaw);
+                if (listaRascunho.isEmpty()) {
+                    System.err.println("Parser não extraiu questão válida. Tentativa: " + (subTentativas + 1));
+                    questaoRaw = null; 
+                    subTentativas++;
+                    continue;
+                }
+
+                Questao rascunho = listaRascunho.get(0);
+                System.out.println("Contextualizando questão para conceito: " + conceitoAtual);
+                String questaoContextualizadaRaw = chamarAgenteContextualizador(rascunho, conceitoAtual);
+                System.out.println("DEBUG: Questão contextualizada: " + questaoContextualizadaRaw);
+
+                List<Questao> listaFinal = parsearRespostaTags(questaoContextualizadaRaw);
+                if (!listaFinal.isEmpty()) {
+                    questaoFinal = listaFinal.get(0);
+                } else {
+                    System.err.println("Parser falhou na contextualização. Tentativa: " + (subTentativas + 1));
+                }
+
+            } catch (Exception e) {
+                System.err.println("Erro na geração [" + conceitoAtual + "]: " + e.getMessage());
             }
             subTentativas++;
         }
 
         if (questaoFinal != null) {
+            questaoFinal = chamarAgenteJulgador(questaoFinal);
+            questaoFinal.setConceito(conceitoAtual);
+            AvaliacaoQuestao avaliacao = chamarAgenteAvaliador(questaoFinal);
+            System.out.println("Competência avaliada: " + avaliacao.getCompetencia());
+            System.out.println("Comentário técnico: " + avaliacao.getComentarioTecnico());
+            questaoFinal.setCompetencia(avaliacao.getCompetencia());
+            questaoFinal.setComentarioTecnico(avaliacao.getComentarioTecnico());
+            questaoFinal.setTopico(nomeTopico);
             blocoFinal.add(questaoFinal);
             System.out.println("Progresso: " + blocoFinal.size() + "/" + quantidadeSolicitada);
         }
-        
-        if (blocoFinal.size() >= quantidadeSolicitada) break;
 
+        if (blocoFinal.size() >= quantidadeSolicitada) break;
         tentativaConceito++;
     }
-        return blocoFinal;
+    return blocoFinal;
     }
 
     private List<String> extrairConceitosUnicos(String contexto, String nivel, int qtd) {
         String prompt = "Liste exatamente %d conceitos técnicos distintos (ex: Protocolo, Atraso de Fila) de %s baseados no material: %s. Separe os itens obrigatoriamente por VÍRGULA.".formatted(qtd, nivel, contexto);
-        String r = this.chatClient.prompt(prompt).options(ChatOptions.builder().temperature(0.7).build()).call().content();
+        String r = this.openAiChatClient.prompt(prompt).options(ChatOptions.builder().temperature(0.7).build()).call().content();
         
         String[] partes = r.split(",|\\n|\\r|\\d+\\.");
         
@@ -112,114 +146,317 @@ public class GeradorQuestaoServiceImpl implements GeradorQuestaoService {
                 .collect(Collectors.toList());
     }
 
-    private List<Questao> parsearRespostaTags(String rawText) {
-        List<Questao> questoes = new ArrayList<>();
-        Pattern patternQuestao = Pattern.compile("(?si)\\[QUESTAO\\](.*?)(?:\\[/QUESTA[OÕÃ]\\]|$)");
-        Matcher matcherQuestao = patternQuestao.matcher(rawText);
+   private List<Questao> parsearRespostaTags(String rawText) {
+    List<Questao> questoes = new ArrayList<>();
 
-        while (matcherQuestao.find()) {
-            String bloco = matcherQuestao.group(1).trim();
-            try {
-                String enun = extrairValorNinja(bloco, "ENUNCIADO");
-                Map<String, String> alts = new HashMap<>();
-                alts.put("a", extrairValorNinja(bloco, "ALT_1"));
-                alts.put("b", extrairValorNinja(bloco, "ALT_2"));
-                alts.put("c", extrairValorNinja(bloco, "ALT_3"));
-                alts.put("d", extrairValorNinja(bloco, "ALT_4"));
-                alts.put("e", extrairValorNinja(bloco, "ALT_5"));
+    Pattern patternBloco = Pattern.compile(
+        "(?si)\\[ENUNCIADO\\](.*?)\\[/ENUNCIADO\\]" +
+        "(.*?)" +
+        "\\[RESPOSTA\\]\\s*(.*?)(?=\\[EXPLICACAO\\])" +
+        "\\[EXPLICACAO\\]\\s*(.*?)\\[/EXPLICACAO\\]"
+    );
 
-                String respRaw = extrairValorNinja(bloco, "RESPOSTA");
-                String resp = mapResposta(respRaw);
+    Matcher matcher = patternBloco.matcher(rawText);
+    while (matcher.find()) {
+        try {
+            String enunciado  = matcher.group(1).trim();
+            String blocoAlts  = matcher.group(2).trim();
+            String respostaRaw = matcher.group(3).trim();
+            String explicacao = matcher.group(4).trim();
 
-                if (!enun.isEmpty() && !resp.isEmpty() && !alts.containsValue("")) {
-                    questoes.add(new Questao(UUID.randomUUID().toString(), enun, alts, resp, extrairValorNinja(bloco, "EXPLICACAO")));
-                }
-            } catch (Exception e) { System.err.println("Erro Parse: " + e.getMessage()); }
+            Map<String, String> alternativas = extrairAlternativas(blocoAlts);
+            String resposta = mapResposta(respostaRaw);
+
+            boolean valido = !enunciado.isEmpty()
+                    && !resposta.isEmpty()
+                    && alternativas.size() == 5
+                    && !alternativas.containsValue("");
+
+            if (valido) {
+                questoes.add(new Questao(
+                    UUID.randomUUID().toString(),
+                    enunciado,
+                    alternativas,
+                    resposta,
+                    explicacao
+                ));
+            } else {
+                System.err.println("Questão descartada — campos incompletos. Alts: "
+                    + alternativas.size() + " | Resposta: '" + resposta + "'");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erro Parse: " + e.getMessage());
         }
-        return questoes;
+    }
+    return questoes;
+    }
+
+    private Map<String, String> extrairAlternativas(String bloco) {
+        Map<String, String> alts = new LinkedHashMap<>();
+
+        Pattern p = Pattern.compile(
+            "(?m)^\\[([A-Ea-e])\\]\\s*(.*?)(?=^\\[[A-Ea-e]\\]|\\[RESPOSTA\\]|$)",
+            Pattern.DOTALL
+        );
+
+        Matcher m = p.matcher(bloco);
+        while (m.find()) {
+            String letra = m.group(1).toLowerCase();
+            String texto = m.group(2).trim();
+            if (!texto.isEmpty()) {
+                alts.put(letra, texto);
+            }
+        }
+        return alts;
     }
 
     private String mapResposta(String raw) {
-        if (raw.contains("1")) return "a";
-        if (raw.contains("2")) return "b";
-        if (raw.contains("3")) return "c";
-        if (raw.contains("4")) return "d";
-        if (raw.contains("5")) return "e";
-        Matcher m = Pattern.compile("(?i)([a-e])").matcher(raw);
-        return m.find() ? m.group(1).toLowerCase() : "";
+        if (raw == null || raw.isBlank()) return "";
+
+        Matcher mExato = Pattern.compile("(?i)^\\s*([a-e])\\s*$").matcher(raw.trim());
+        if (mExato.find()) return mExato.group(1).toLowerCase();
+
+        Matcher mFallback = Pattern.compile("(?i)([a-e])").matcher(raw);
+        if (mFallback.find()) return mFallback.group(1).toLowerCase();
+
+        return "";
     }
 
-    private String extrairValorNinja(String bloco, String tag) {
-        String regex = "(?mi)^\\s*" + tag + "\\s*[:;\\)\\.\\-]*\\s*(.*?)(?=\\s*^(?:ENUNCIADO|ALT_1|ALT_2|ALT_3|ALT_4|ALT_5|RESPOSTA|EXPLICACAO)[:;\\)\\.\\-]|\\s*\\[/|\\s*$)";
-        Matcher m = Pattern.compile(regex, Pattern.DOTALL).matcher(bloco);
-        return m.find() ? m.group(1).trim() : "";
-    }
-
-    private String chamarAgenteEscritor(String topico, String nivel, String contexto, TopicoConfigEntity config, String conceito, String cenario) {
+    private String chamarAgenteEscritor(String topico, String nivel, String contexto, TopicoConfigEntity config, String conceito) {
         PromptTemplate template = new PromptTemplate(config.getInstrucoesEspecificas());
         Map<String, Object> params = Map.of(
             "nivel", nivel, 
             "topico", topico, 
             "contexto", contexto, 
-            "conceitos", conceito, 
-            "cenario", cenario
+            "conceito", conceito        
         );
 
-        String reforçoEnunciado = "\n\nFOCO: Gere APENAS o enunciado da questão dentro da tag [ENUNCIADO]...[/ENUNCIADO]. " +
-                                "O texto deve ser denso (+100 palavras), técnico e baseado no cenário fornecido. " +
-                                "Não gere alternativas ou respostas agora.";
 
-        return this.chatClient.prompt(template.render(params) + reforçoEnunciado)
+        return this.openAiChatClient.prompt(template.render(params))
                 .options(ChatOptions.builder().temperature(0.8).build()) 
                 .call()
                 .content();
     }
 
+   private String chamarAgenteContextualizador(Questao questao, String conceito) {
+    System.out.println("Contextualizando questão para conceito: " + conceito);
 
-    private String chamarAgenteAlternativas(String enunciadoGerado, String contextoTecnico, String conceito, String nivel) {
-        String prompt = """
-                Sua missão é gerar as alternativas para um enunciado de prova.
-                ATENÇÃO: Gere APENAS UMA ÚNICA ESTRUTURA [QUESTAO]...[/QUESTAO]. É proibido gerar variações ou múltiplas questões.
-                
-                CONTEXTO: %s
-                CONCEITO: %s
-                
-                ENUNCIADO:
-                %s
-                
-                DIRETRIZES:
-                - Crie 5 alternativas (ALT_1 a ALT_5).
-                - Use entre 15 e 30 palavras por alternativa (seja técnico e claro).
-                - Indique a RESPOSTA (1 a 5).
+    String alternativasFormatadas = questao.getAlternativas().entrySet().stream()
+            .map(e -> "[" + e.getKey().toUpperCase() + "] " + e.getValue())
+            .collect(Collectors.joining("\n"));
 
-                DIRETRIZES DE REFINAMENTO:
-                1. EQUILÍBRIO DE TEXTO: Cada alternativa deve ter, obrigatoriamente, entre 25 e 40 palavras.
-                2. DENSIDADE TÉCNICA: Em vez de frases genéricas, use argumentos técnicos. Trnasforme frases simples em frases mais longas e conceituadas.
-                Exemplo ruim: "Adotar TCP garante confiabilidade."
-                Exemplo bom: "A transição para o protocolo TCP introduz mecanismos de controle de fluxo e retransmissão seletiva, garantindo que segmentos perdidos em rajadas de tráfego sejam recuperados, embora introduza um overhead de cabeçalho."
-                3. DISTRATORES OBSCUROS: Crie alternativas que pareçam corretas para quem não domina o conceito, mas claramente erradas para quem domina o conceito. O objetivo é criar armadilhas para induzir o erro de candidatos que não dominam o assunto.
-                
-                FORMATO:
-                [QUESTAO]
-                ENUNCIADO: [REPITA O ENUNCIADO RECEBIDO AQUI]
-                ALT_1: ...
-                ALT_2: ...
-                ALT_3: ...
-                ALT_4: ...
-                ALT_5: ...
-                RESPOSTA: [Número]
-                EXPLICACAO: ...
-                [/QUESTAO]
-                """.formatted(contextoTecnico, conceito, enunciadoGerado);
+    String prompt = """
+        Você é um especialista em elaboração de questões de concurso público na área de redes de computadores.
 
-        return this.chatClient.prompt(prompt)
-                .options(ChatOptions.builder().temperature(0.4).build())
-                .call()
-                .content();
+        Sua tarefa é reescrever a questão abaixo em formato contextualizado,
+        no estilo de bancas como FGV, CESPE e FCC.
+
+        ### QUESTÃO ORIGINAL ###
+        Enunciado: %s
+        Alternativas:
+        %s
+        Resposta correta: %s
+        Conceito testado: %s
+
+        ### REGRAS ###
+        1. Crie um contexto narrativo realista (empresa, cenário técnico, situação-problema) usando entre 130 e 150 palavras.
+        2. A pergunta deve fluir naturalmente do contexto — não use "Com base no texto acima".
+        3. As alternativas NÃO devem ser alteradas — apenas o enunciado muda.
+        4. O conceito testado deve permanecer exatamente o mesmo.
+        5. O contexto deve ser técnico e denso, mas compreensível.
+        6. Termine com uma pergunta direta e objetiva, sem "Qual das alternativas abaixo".
+        7. Prefira contextos do mundo real: data centers, ISPs, redes corporativas, IoT,
+           telecomunicações, etc.
+
+        ### FORMATO DE SAÍDA (siga exatamente, sem texto adicional) ###
+        [ENUNCIADO]
+        <narrativa + pergunta>
+        [/ENUNCIADO]
+        [A] <alternativa A original>
+        [B] <alternativa B original>
+        [C] <alternativa C original>
+        [D] <alternativa D original>
+        [E] <alternativa E original>
+        [RESPOSTA] <letra original>
+        [EXPLICACAO]
+        <explicação original>
+        [/EXPLICACAO]
+        """.formatted(
+            questao.getEnunciado(),
+            alternativasFormatadas,
+            questao.getRespostaCorreta().toUpperCase(),
+            conceito
+        );
+
+    return this.openAiChatClient.prompt(prompt)
+            .options(ChatOptions.builder().temperature(0.4).build())
+            .call()
+            .content();
     }
 
-    private String recuperarContextoDoBanco(String t, String n) {
-        SearchRequest sr = SearchRequest.builder().query(t).topK(6).build();
-        return this.vectorStore.similaritySearch(sr).stream().map(Document::getText).collect(Collectors.joining("\n"));
+    private Questao chamarAgenteJulgador(Questao questao) {
+
+    String alternativasFormatadas = questao.getAlternativas().entrySet().stream()
+            .map(e -> "[" + e.getKey().toUpperCase() + "] " + e.getValue())
+            .collect(Collectors.joining("\n"));
+
+    String prompt = """
+        Você é um avaliador especialista em elaboração de questões de redes de computadores
+        no nível de concursos públicos e provas universitárias.
+
+        Sua tarefa é julgar a qualidade da questão abaixo.
+
+        ### QUESTÃO ###
+        [ENUNCIADO]
+        %s
+        [/ENUNCIADO]
+
+        %s
+
+        [RESPOSTA]
+        %s
+        [/RESPOSTA]
+
+        [EXPLICACAO]
+        %s
+        [/EXPLICACAO]
+
+        ### CRITÉRIOS DE AVALIAÇÃO ###
+        Avalie:
+
+        1. Clareza do enunciado
+        2. Existência de apenas uma resposta correta
+        3. Ausência de ambiguidade
+        4. Coerência técnica
+        5. Qualidade dos distratores
+        6. Nível adequado de dificuldade
+
+        ### REGRAS ###
+        - Escreva um feedback detalhado, apontando pontos fortes e fracos da questão.
+        - Dê uma nota de 0 a 10, onde 10 é excelente e 0 é inaceitável.
+        - Monte uma nova versão da questão com enunciado e alternativas melhoradas de acordo com o seu feedback.
+        - O formato de saída da nova questão deve ser o mesmo da questão original, usando as mesmas tags [ENUNCIADO], [A], [B], [C], [D], [E], [RESPOSTA] e [EXPLICACAO].
+        
+        """.formatted(
+            questao.getEnunciado(),
+            alternativasFormatadas,
+            questao.getRespostaCorreta().toUpperCase(),
+            questao.getExplicacao()
+    );
+
+    String resposta = this.anthropicChatClient.prompt(prompt)
+            .options(ChatOptions.builder().temperature(0.1).build())
+            .call()
+            .content();
+
+    List<Questao> questoesMelhoradas = parsearRespostaTags(resposta);
+    if (!questoesMelhoradas.isEmpty()) {
+        Questao questaoMelhorada = questoesMelhoradas.get(0);
+        System.out.println("Julgador melhorou a questão com sucesso.");
+        questaoMelhorada.setFeedbackJulgador("Julgador melhorou a questão com sucesso.");
+        return questaoMelhorada;
+    }
+
+    System.err.println("Julgador não gerou questão parseável — mantendo questão original.");
+    questao.setFeedbackJulgador(resposta);
+    return questao;
+
+    }
+
+    private AvaliacaoQuestao chamarAgenteAvaliador(Questao questao){
+
+      String prompt = """
+        Você é um avaliador especialista em elaboração de questões de redes de computadores
+        no nível de concursos públicos e provas universitárias.
+
+        Sua tarefa é analisar a questão abaixo, e tecer um comentário técnico a respeito da questão. 
+
+        ### VOCÊ DEVE IDENTIFICAR ### 
+        - Competência que está sendo cobrada
+        
+        ### VOCÊ DEVE FAZER ### 
+        - Uma análise técnica da questão, explicando qual a alternativa correta e justificando porque as outras estão erradas.
+
+        ### QUESTÃO ###
+        [ENUNCIADO]
+        %s
+        [/ENUNCIADO]
+
+        %s
+
+        [RESPOSTA]
+        %s
+        [/RESPOSTA]
+
+
+        ### FORMATO DE SAÍDA ### 
+
+        Responda APENAS no seguinte formato JSON:
+
+        {
+        "competencia": "Competência principal avaliada",
+        "comentarioTecnico": "Comentário técnico detalhado da questão"
+        }
+
+        Não adicione texto fora do JSON.
+
+        
+        """.formatted(
+            questao.getEnunciado(),
+            questao.getAlternativas().entrySet().stream()
+                .map(e -> "[" + e.getKey().toUpperCase() + "] " + e.getValue())
+                .collect(Collectors.joining("\n")),
+            questao.getRespostaCorreta().toUpperCase()
+        );
+
+        String resposta = this.anthropicChatClient.prompt(prompt)
+        .options(ChatOptions.builder().temperature(0.1).build())
+        .call()
+        .content();
+
+        resposta = resposta
+        .replace("```json", "")
+        .replace("```", "")
+        .trim();
+
+            try {
+                return objectMapper.readValue(resposta, AvaliacaoQuestao.class);
+            } catch (Exception e) {
+                throw new RuntimeException("Erro ao parsear avaliação da questão: " + resposta, e);
+            }
+
+    }
+
+
+
+
+    // private String recuperarContextoDoBanco(String t, String n) {
+    //     SearchRequest sr = SearchRequest.builder().query(t).topK(6).build();
+    //     return this.vectorStore.similaritySearch(sr).stream().map(Document::getText).collect(Collectors.joining("\n"));
+    // }
+
+    private String recuperarContextoDoBanco(String conceito) {
+    
+    String queryEnriquecida = "Redes de Computadores Kurose %s".formatted(conceito);
+
+    SearchRequest sr = SearchRequest.builder()
+            .query(queryEnriquecida)
+            .topK(4) 
+            .build();
+
+    List<Document> documentos = this.vectorStore.similaritySearch(sr);
+
+    if (documentos.isEmpty()) {
+        System.err.println("Nenhum contexto encontrado para: " + conceito);
+        return "";
+    }
+
+    System.out.println("Contexto recuperado para [" + conceito + "]: "
+            + documentos.size() + " chunks");
+
+    return documentos.stream()
+            .map(Document::getText)
+            .collect(Collectors.joining("\n---\n")); 
     }
 }

@@ -2,133 +2,250 @@
   <header>
     <h1>Gerenciar Banco de Questões</h1>
     <p class="subtitle">Visualize, edite ou exclua suas questões cadastradas.</p>
+
+    <button 
+    class="btn-cadastrar"
+    (click)="abrirCadastro()"
+    >
+    + Cadastrar Questão
+    </button>
+
+
   </header>
 
-  <div *ngIf="isLoading">Carregando...</div>
+  <div *ngIf="isLoading" class="loading">
+    Carregando questões...
+  </div>
 
-  <!-- LISTA DE CARDS -->
-  <div class="grid-questoes" *ngIf="!isLoading">
-    
+  <!-- LISTA DE QUESTÕES -->
+  <div class="lista-questoes" *ngIf="!isLoading">
+
     <div class="card-questao" *ngFor="let q of questoes">
+
+      <!-- HEADER -->
       <div class="card-header">
-        <span class="badge-tipo">{{ q.tipo }}</span>
-        <span class="badge-topico">{{ q.topico }}</span>
+        <div class="badges">
+          <span class="badge-tipo">{{ q.tipo }}</span>
+          <span class="badge-topico">{{ q.topico }}</span>
+        </div>
       </div>
-      
-      <p class="enunciado-resumo">{{ q.enunciado }}</p>
 
-      <div class="area-alternativas-preview" 
-           *ngIf="q.tipo === 'MULTIPLA_ESCOLHA_4' || q.tipo === 'MULTIPLA_ESCOLHA_5'">
-      
-        <ul *ngFor="let key of objectKeys(q.alternativas)">
-          <!-- Itera sobre as chaves (a, b, c, d...) -->
-        <ng-container *ngIf="q.alternativas[key]">
-          <li>
-            <strong>{{ key | uppercase }})</strong> {{ q.alternativas[key] }}
-          </li>
-        </ng-container>
-        
-        </ul>
-
+      <!-- ENUNCIADO -->
+      <div class="enunciado">
+        {{ q.enunciado }}
       </div>
-      
+
+      <!-- ALTERNATIVAS -->
+      <div 
+        class="area-alternativas"
+        *ngIf="q.tipo === 'MULTIPLA_ESCOLHA_4' || q.tipo === 'MULTIPLA_ESCOLHA_5'"
+      >
+        <div 
+          class="alternativa"
+          *ngFor="let key of objectKeys(q.alternativas)"
+        >
+          <ng-container *ngIf="q.alternativas[key]">
+            <span class="letra">{{ key | uppercase }})</span>
+            <span class="texto">{{ q.alternativas[key] }}</span>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- GABARITO -->
+      <div class="gabarito">
+        <strong>Resposta Correta:</strong> 
+        {{ q.respostaCorreta | uppercase }}
+      </div>
+
+      <!-- AÇÕES -->
       <div class="card-actions">
-        <button class="btn-editar" (click)="onAbrirEdicao(q)">Editar</button>
-        <button class="btn-excluir" (click)="onExcluir(q.id)">Excluir</button>
+        
+        <button 
+          class="btn-comentarios"
+          (click)="abrirComentarios(q)"
+        >
+          Comentários
+        </button>
+
+        <button 
+          class="btn-editar"
+          (click)="onAbrirEdicao(q)"
+        >
+          Editar
+        </button>
+
+        <button 
+          class="btn-excluir"
+          (click)="onExcluir(q.id)"
+        >
+          Excluir
+        </button>
+
       </div>
+
     </div>
 
     <div *ngIf="questoes.length === 0" class="empty-state">
       Nenhuma questão cadastrada ainda.
     </div>
+
   </div>
 </div>
 
-<!-- MODAL DE EDIÇÃO -->
-<div class="modal-overlay" *ngIf="isEditModalOpen && questaoEmEdicao">
-  <div class="modal-box">
-    <h3>Editar Questão</h3>
+
+<!-- MODAL DE COMENTÁRIOS -->
+<div class="modal-overlay" *ngIf="isComentarioModalOpen && questaoComentario">
+  <div class="modal-box modal-comentarios">
     
-    <div class="form-modal">
-      <!-- Tópico -->
-      <div class="form-group">
-        <label>Tópico:</label>
-        <input [(ngModel)]="questaoEmEdicao.topico" type="text">
-      </div>
-
-      <!-- Enunciado -->
-      <div class="form-group">
-        <label>Enunciado:</label>
-        <textarea [(ngModel)]="questaoEmEdicao.enunciado" rows="4"></textarea>
-      </div>
-
-     <!-- ALTERNATIVAS -->
-      <div *ngIf="questaoEmEdicao.tipo !== 'DISCURSIVA'" class="area-alternativas">
-        <h4>Alternativas</h4>
-        <!-- Itera sobre as chaves -->
-        <ng-container *ngFor="let key of objectKeys(questaoEmEdicao.alternativas)">
-          <div class="input-group" *ngIf="questaoEmEdicao.alternativas[key]">
-            <span class="prefixo">{{ key | uppercase }})</span>
-            <input [(ngModel)]="questaoEmEdicao.alternativas[key]" type="text">
-          </div>
-        </ng-container>
-      </div>
-      <!-- GABARITO -->
-      <div class="form-group">
-        <label>Resposta Correta:</label>
-        
-        <!-- Se for Discursiva, usa Textarea -->
-        <textarea *ngIf="questaoEmEdicao.tipo === 'DISCURSIVA'" 
-                  [(ngModel)]="questaoEmEdicao.respostaCorreta" rows="4"></textarea>
-        
-        <!-- Se não, usa Input simples (ou poderia ser Select) -->
-        <!-- <input *ngIf="questaoEmEdicao.tipo === 'VERDADEIRO_F'" 
-               [(ngModel)]="questaoEmEdicao.respostaCorreta" type="text"> -->
-
-
-        <div *ngIf="questaoEmEdicao.tipo === 'VERDADEIRO_FALSO'" class="form-row">
-        <select [(ngModel)]="questaoEmEdicao.respostaCorreta" class="select-gabarito">
-          <option value="" disabled>Selecione...</option>
-          <option value="V">VERDADEIRO</option>
-          <option value="F">FALSO</option>
-        </select>
-      </div>
-
-      
-      <div *ngIf="questaoEmEdicao.tipo === 'MULTIPLA_ESCOLHA_5'" class="form-row">
-      <div class="form-row">
-        <select [(ngModel)]="questaoEmEdicao.respostaCorreta" class="select-gabarito">
-          <option value="" disabled>Selecione...</option>
-          <option value="a">Alternativa A</option>
-          <option value="b">Alternativa B</option>
-          <option value="c">Alternativa C</option>
-          <option value="d">Alternativa D</option>
-          <option value="e">Alternativa E</option>
-        </select>
-      </div>
-      </div>
-
-      <div *ngIf="questaoEmEdicao.tipo === 'MULTIPLA_ESCOLHA_4'" class="form-row">
-      <div class="form-row">
-        <select [(ngModel)]="questaoEmEdicao.respostaCorreta" class="select-gabarito">
-          <option value="" disabled>Selecione...</option>
-          <option value="a">Alternativa A</option>
-          <option value="b">Alternativa B</option>
-          <option value="c">Alternativa C</option>
-          <option value="d">Alternativa D</option>
-        </select>
-      </div>
-      </div>
-
-
-
-
-      </div>
+    <div class="modal-header">
+      <h3>Comentários Técnicos da Questão</h3>
+      <button class="btn-fechar" (click)="fecharComentarios()">✕</button>
     </div>
 
-    <div class="modal-buttons">
-      <button class="btn-cancelar" (click)="onCancelarEdicao()">Cancelar</button>
-      <button class="btn-salvar" (click)="onSalvarEdicao()">Salvar Alterações</button>
+    <div class="modal-content">
+
+      <div class="secao">
+        <h4>Competência Avaliada</h4>
+        <p class="competencia">
+          {{ questaoComentario.competencia || 'Não informada' }}
+        </p>
+      </div>
+
+      <div class="secao">
+        <h4>Comentário Técnico</h4>
+        <div class="comentario-texto">
+          {{ questaoComentario.comentarioTecnico || 'Nenhum comentário disponível.' }}
+        </div>
+      </div>
+
     </div>
+
+    <div class="modal-footer">
+      <button 
+        class="btn-fechar-modal"
+        (click)="fecharComentarios()"
+      >
+        Fechar
+      </button>
+    </div>
+
   </div>
 </div>
+
+<!-- MODAL CADASTRAR QUESTÃO -->
+<div class="modal-overlay" *ngIf="isCadastroModalOpen">
+  <div class="modal-box modal-cadastro">
+
+    <div class="modal-header">
+      <h3>{{ isModoEdicao ? 'Editar Questão' : 'Cadastrar Nova Questão' }}</h3>
+      <button class="btn-fechar" (click)="fecharCadastro()">✕</button>
+    </div>
+
+    <div class="modal-content">
+
+      <!-- TOPICO -->
+      <div class="form-group">
+        <label>Tópico</label>
+        <input [(ngModel)]="novaQuestao.topico" type="text">
+      </div>
+
+      <!-- ENUNCIADO -->
+      <div class="form-group">
+        <label>Enunciado</label>
+        <textarea 
+          [(ngModel)]="novaQuestao.enunciado"
+          rows="4">
+        </textarea>
+      </div>
+
+      <!-- ALTERNATIVAS -->
+      <div class="area-alternativas-form">
+
+        <h4>Alternativas</h4>
+
+        <div class="input-group">
+          <span>A)</span>
+          <input [(ngModel)]="novaQuestao.alternativas['a']">
+        </div>
+
+        <div class="input-group">
+          <span>B)</span>
+          <input [(ngModel)]="novaQuestao.alternativas['b']">
+        </div>
+
+        <div class="input-group">
+          <span>C)</span>
+          <input [(ngModel)]="novaQuestao.alternativas['c']">
+        </div>
+
+        <div class="input-group">
+          <span>D)</span>
+          <input [(ngModel)]="novaQuestao.alternativas['d']">
+        </div>
+
+        <div class="input-group">
+          <span>E)</span>
+          <input [(ngModel)]="novaQuestao.alternativas['e']">
+        </div>
+
+      </div>
+
+      <!-- RESPOSTA -->
+      <div class="form-group">
+        <label>Resposta Correta</label>
+
+        <select [(ngModel)]="novaQuestao.respostaCorreta">
+          <option value="">Selecione</option>
+          <option value="a">A</option>
+          <option value="b">B</option>
+          <option value="c">C</option>
+          <option value="d">D</option>
+          <option value="e">E</option>
+        </select>
+
+      </div>
+
+      <!-- COMPETENCIA -->
+      <div class="form-group">
+        <label>Competência</label>
+        <input [(ngModel)]="novaQuestao.competencia">
+      </div>
+
+      <!-- CONCEITO -->
+      <div class="form-group">
+        <label>Conceito</label>
+        <textarea 
+          [(ngModel)]="novaQuestao.conceito"
+          rows="3">
+        </textarea>
+      </div>
+
+      <!-- COMENTARIO TECNICO -->
+      <div class="form-group">
+        <label>Comentário Técnico</label>
+        <textarea 
+          [(ngModel)]="novaQuestao.comentarioTecnico"
+          rows="4">
+        </textarea>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button 
+        class="btn-cancelar"
+        (click)="fecharCadastro()"
+      >
+        Cancelar
+      </button>
+
+      <button 
+        class="btn-salvar"
+        (click)="salvarQuestao()"
+      >
+    {{ isModoEdicao ? 'Salvar Alterações' : 'Cadastrar' }}      </button>
+    </div>
+
+  </div>
+</div>
+

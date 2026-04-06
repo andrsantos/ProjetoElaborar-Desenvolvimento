@@ -10,4 +10,5 @@ import com.Projeto.GeradorDeQuestoes.entities.CenarioConfigEntity;
 @Repository
 public interface CenarioConfigRepository extends JpaRepository<CenarioConfigEntity, Long> {
     List<CenarioConfigEntity> findByTopicoAndNivel(String topico, String nivel);
+    void deleteById(Long id);
 } 

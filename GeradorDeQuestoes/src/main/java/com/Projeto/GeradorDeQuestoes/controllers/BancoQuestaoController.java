@@ -1,6 +1,8 @@
 package com.Projeto.GeradorDeQuestoes.controllers;
 
+import com.Projeto.GeradorDeQuestoes.dto.QuestaoDTO;
 import com.Projeto.GeradorDeQuestoes.entities.BancoQuestaoEntity;
+import com.Projeto.GeradorDeQuestoes.enums.TipoQuestao;
 import com.Projeto.GeradorDeQuestoes.repositories.BancoQuestaoRepository;
 
 import java.util.List;
@@ -21,7 +23,22 @@ public class BancoQuestaoController {
     }
 
     @PostMapping
-    public ResponseEntity<BancoQuestaoEntity> criarQuestao(@RequestBody BancoQuestaoEntity questao) {
+    public ResponseEntity<BancoQuestaoEntity> criarQuestao(@RequestBody QuestaoDTO questao) {
+        BancoQuestaoEntity novaQuestao = new BancoQuestaoEntity();
+        novaQuestao.setEnunciado(questao.getEnunciado());
+        novaQuestao.setAlternativas(questao.getAlternativas());
+        novaQuestao.setRespostaCorreta(questao.getRespostaCorreta());
+        novaQuestao.setConceito(questao.getConceito());
+        novaQuestao.setCompetencia(questao.getCompetencia());
+        novaQuestao.setComentarioTecnico(questao.getComentarioTecnico());
+        novaQuestao.setTipo(TipoQuestao.MULTIPLA_ESCOLHA_5);
+        novaQuestao.setTopico(questao.getTopico());
+        BancoQuestaoEntity salva = repository.save(novaQuestao);
+        return ResponseEntity.ok(salva);
+    }
+
+    @PostMapping("/cadastrar")
+    public ResponseEntity<BancoQuestaoEntity> cadastrarQuestao(@RequestBody BancoQuestaoEntity questao) {
         BancoQuestaoEntity salva = repository.save(questao);
         return ResponseEntity.ok(salva);
     }

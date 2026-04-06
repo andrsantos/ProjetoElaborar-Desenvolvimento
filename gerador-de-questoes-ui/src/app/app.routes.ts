@@ -10,6 +10,7 @@ import { GerenciarBanco } from './pages/banco-dashboard/gerenciar-banco/gerencia
 import { BancoDashboard } from './pages/banco-dashboard/banco-dashboard';
 import { BancoQuestoes } from './pages/banco-dashboard/banco-questoes/banco-questoes';
 import { SelecionarQuestao } from './pages/banco-dashboard/selecionar-questao/selecionar-questao';
+import { Gerenciamento } from './pages/gerenciamento/gerenciamento';
 
 export const routes: Routes = [
    {
@@ -67,5 +68,11 @@ export const routes: Routes = [
     path:'alimentacao',
     component: Alimentacao,
     title:'Alimentacao - RAG'
+  },
+    {
+    path:'gerenciamento',
+    component: Gerenciamento,
+    title:'Gerenciamento - RAG'
   }
+
 ];

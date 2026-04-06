@@ -16,4 +16,11 @@ export interface BancoQuestao {
   alternativas: { [key: string]: string }; 
   
   respostaCorreta: string;
+
+  conceito: string;
+
+  comentarioTecnico: string;
+
+  competencia: string;
+  
 }
