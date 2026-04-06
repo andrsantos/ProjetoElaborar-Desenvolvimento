@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { BancoQuestao } from '../../models/banco-questao.model';
 
 @Injectable({
   providedIn: 'root',
@@ -24,6 +25,10 @@ export class BancoQuestoesService {
   }
   excluirQuestao(id: string): Observable<void> {
     return this.http.delete<void>(`${this.API_URL}/${id}`);
+  }
+  cadastrarQuestao(questao: BancoQuestao): Observable<any> {
+    console.log("Questão a ser cadastrada:", questao);
+    return this.http.post(`${this.API_URL}/cadastrar`, questao);
   }
 }
   
