@@ -1,5 +1,7 @@
 package com.Projeto.GeradorDeQuestoes.entities;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,8 +24,19 @@ public class TopicoConfigEntity {
 
     @Column(name = "instrucoes_especificas", columnDefinition = "TEXT")
     private String instrucoesEspecificas;
+
+    @Column(name = "data_atualizacao")
+    private LocalDateTime dataAtualizacao;
     
 
+
+    public LocalDateTime getDataAtualizacao() {
+        return this.dataAtualizacao;
+    }
+
+    public void setDataAtualizacao(LocalDateTime dataAtualizacao) {
+        this.dataAtualizacao = dataAtualizacao;
+    }
 
     public String getId() {
         return this.id;
