@@ -1,9 +1,12 @@
 package com.Projeto.GeradorDeQuestoes.entities;
 
 import com.Projeto.GeradorDeQuestoes.enums.TipoQuestao;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -41,6 +44,10 @@ public class BancoQuestaoEntity {
     @Column(name = "competencia", columnDefinition = "TEXT")
     private String competencia;
 
+    @Column(name = "data_criacao")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime dataCriacao;
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public String getTopico() { return topico; }
@@ -77,6 +84,16 @@ public class BancoQuestaoEntity {
     public void setCompetencia(String competencia) {
         this.competencia = competencia;
     }
+
+
+    public LocalDateTime getDataCriacao() {
+        return this.dataCriacao;
+    }
+
+    public void setDataCriacao(LocalDateTime dataCriacao) {
+        this.dataCriacao = dataCriacao;
+    }
+
 
 
 }

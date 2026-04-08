@@ -22,5 +22,7 @@ export interface BancoQuestao {
   comentarioTecnico: string;
 
   competencia: string;
+
+  dataCriacao?: string;
   
 }

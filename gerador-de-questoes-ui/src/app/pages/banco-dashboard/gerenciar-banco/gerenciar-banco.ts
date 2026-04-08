@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { BancoQuestoesService } from '../../../services/banco-questoes/banco-questoes';
 import { BancoQuestao } from '../../../models/banco-questao.model';
+import { ProvaService } from '../../../services/prova/prova-service';
 
 @Component({
   selector: 'app-gerenciar-banco',
@@ -14,24 +15,48 @@ import { BancoQuestao } from '../../../models/banco-questao.model';
 })
 export class GerenciarBanco implements OnInit {
 
-  questoes: BancoQuestao[] = [];
+  questoes: BancoQuestao[] = [];          
+  questoesExibidas: BancoQuestao[] = [];  
+  topicosDisponiveis: string[] = [];
+  
+  topicoSelecionado: string = '';
+  ordemSelecionada: 'asc' | 'desc' = 'desc';
+
   isLoading = false;
   isEditModalOpen = false;
-  questaoEmEdicao: BancoQuestao | null = null;
-  objectKeys = Object.keys;
   isComentarioModalOpen = false;
-  questaoComentario: BancoQuestao | null = null;
   isCadastroModalOpen = false;
-  novaQuestao: BancoQuestao = this.criarNovaQuestao();
   isModoEdicao = false;
+  
+  questaoEmEdicao: BancoQuestao | null = null;
+  questaoComentario: BancoQuestao | null = null;
+  novaQuestao: BancoQuestao = this.criarNovaQuestao();
+  
+  objectKeys = Object.keys;
+
+  searchTerm: string = '';
+
 
   constructor(
     private bancoService: BancoQuestoesService,
+    private provaService: ProvaService,
     private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
     this.carregarQuestoes();
+    this.buscarTopicos();
+  }
+
+  buscarTopicos() {
+    this.provaService.getTopicosDisponiveis().subscribe({
+      next: (topicos) => {
+        this.topicosDisponiveis = topicos;
+      },
+      error: (err) => {
+        console.error("Erro ao buscar tópicos:", err);
+      }
+    });
   }
 
   carregarQuestoes(): void {
@@ -39,6 +64,7 @@ export class GerenciarBanco implements OnInit {
     this.bancoService.listarTodas().subscribe({
       next: (data) => {
         this.questoes = data;
+        this.aplicarFiltros(); 
         this.isLoading = false;
       },
       error: () => {
@@ -48,13 +74,55 @@ export class GerenciarBanco implements OnInit {
     });
   }
 
+  aplicarFiltros() {
+    let resultado = [...this.questoes];
+
+    if (this.topicoSelecionado) {
+      resultado = resultado.filter(q => q.topico === this.topicoSelecionado);
+    }
+
+    if (this.searchTerm) {
+    const termo = this.searchTerm.toLowerCase();
+    resultado = resultado.filter(q => 
+      q.enunciado.toLowerCase().includes(termo) || 
+      q.topico.toLowerCase().includes(termo) ||
+      (q.conceito && q.conceito.toLowerCase().includes(termo))
+    );
+  }
+
+    resultado.sort((a, b) => {
+      const dataA = a.dataCriacao ? new Date(a.dataCriacao).getTime() : 0;
+      const dataB = b.dataCriacao ? new Date(b.dataCriacao).getTime() : 0;
+
+      return this.ordemSelecionada === 'asc' 
+        ? dataA - dataB 
+        : dataB - dataA;
+    });
+
+    this.questoesExibidas = resultado;
+  }
+
+  onSearch() {
+  this.aplicarFiltros();
+  }
+
+  onTopicoChange(event: any) {
+    this.topicoSelecionado = event.target.value;
+    this.aplicarFiltros();
+  }
+
+  onOrderChange(event: any) {
+    this.ordemSelecionada = event.target.value as 'asc' | 'desc';
+    this.aplicarFiltros();
+  }
+
   onExcluir(id: string | undefined): void {
     if (!id) return;
     if (confirm('Tem certeza que deseja excluir esta questão?')) {
       this.bancoService.excluirQuestao(id).subscribe({
         next: () => {
           this.toastr.success('Questão excluída.');
-          this.carregarQuestoes(); // Recarrega a lista
+          this.carregarQuestoes();
         },
         error: () => this.toastr.error('Erro ao excluir.')
       });
@@ -67,112 +135,58 @@ export class GerenciarBanco implements OnInit {
     this.isCadastroModalOpen = true;
   }
 
-  onCancelarEdicao(): void {
-    this.isEditModalOpen = false;
-    this.questaoEmEdicao = null;
-  }
-
-  onSalvarEdicao(): void {
-    if (!this.questaoEmEdicao || !this.questaoEmEdicao.id) return;
-    this.bancoService.atualizarQuestao(this.questaoEmEdicao.id, this.questaoEmEdicao).subscribe({
-      next: () => {
-        this.toastr.success('Questão atualizada com sucesso!');
-        this.isEditModalOpen = false;
-        this.carregarQuestoes(); 
-      },
-      error: () => this.toastr.error('Erro ao atualizar questão.')
-    });
-  }
-
-  abrirComentarios(questao: BancoQuestao) {
-  this.questaoComentario = questao;
-  this.isComentarioModalOpen = true;
-  }
-
-  fecharComentarios() {
-  this.isComentarioModalOpen = false;
-  this.questaoComentario = null;
-  }
-
-  criarNovaQuestao(): BancoQuestao {
-  return {
-    tipo: "MULTIPLA_ESCOLHA_5",
-    topico: "",
-    enunciado: "",
-    alternativas: {
-      a: "",
-      b: "",
-      c: "",
-      d: "",
-      e: ""
-    },
-    respostaCorreta: "",
-    competencia: "",
-    conceito: "",
-    comentarioTecnico: ""
-  } as BancoQuestao;
-  }
-
-  abrirCadastro() {
-  this.novaQuestao = this.criarNovaQuestao();
-  this.isCadastroModalOpen = true;
-  }
-
-  fecharCadastro() {
-  this.isCadastroModalOpen = false;
-  this.isModoEdicao = false;
-  }
-
-  // cadastrarQuestao() {
-
-  // this.bancoService.cadastrarQuestao(this.novaQuestao)
-  //   .subscribe({
-  //     next: () => {
-  //       this.toastr.success("Questão cadastrada com sucesso!");
-  //       this.fecharCadastro();
-  //       this.carregarQuestoes();
-  //     },
-  //     error: () => {
-  //       this.toastr.error("Erro ao cadastrar questão");
-  //     }
-  //   });
-
-  // }
-
   salvarQuestao() {
-
-  if (this.isModoEdicao && this.novaQuestao.id) {
-
-    this.bancoService
-      .atualizarQuestao(this.novaQuestao.id, this.novaQuestao)
-      .subscribe({
+    if (this.isModoEdicao && this.novaQuestao.id) {
+      this.bancoService.atualizarQuestao(this.novaQuestao.id, this.novaQuestao).subscribe({
         next: () => {
           this.toastr.success("Questão atualizada com sucesso!");
           this.fecharCadastro();
           this.carregarQuestoes();
         },
-        error: () => {
-          this.toastr.error("Erro ao atualizar questão");
-        }
+        error: () => this.toastr.error("Erro ao atualizar questão")
       });
-
-  } else {
-
-    this.bancoService
-      .cadastrarQuestao(this.novaQuestao)
-      .subscribe({
+    } else {
+      this.bancoService.cadastrarQuestao(this.novaQuestao).subscribe({
         next: () => {
           this.toastr.success("Questão cadastrada com sucesso!");
           this.fecharCadastro();
           this.carregarQuestoes();
         },
-        error: () => {
-          this.toastr.error("Erro ao cadastrar questão");
-        }
+        error: () => this.toastr.error("Erro ao cadastrar questão")
       });
-
+    }
   }
 
+  abrirComentarios(questao: BancoQuestao) {
+    this.questaoComentario = questao;
+    this.isComentarioModalOpen = true;
   }
 
+  fecharComentarios() {
+    this.isComentarioModalOpen = false;
+    this.questaoComentario = null;
+  }
+
+  abrirCadastro() {
+    this.novaQuestao = this.criarNovaQuestao();
+    this.isCadastroModalOpen = true;
+  }
+
+  fecharCadastro() {
+    this.isCadastroModalOpen = false;
+    this.isModoEdicao = false;
+  }
+
+  criarNovaQuestao(): BancoQuestao {
+    return {
+      tipo: "MULTIPLA_ESCOLHA_5",
+      topico: "",
+      enunciado: "",
+      alternativas: { a: "", b: "", c: "", d: "", e: "" },
+      respostaCorreta: "",
+      competencia: "",
+      conceito: "",
+      comentarioTecnico: ""
+    } as BancoQuestao;
+  }
 }
