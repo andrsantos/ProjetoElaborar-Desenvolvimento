@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class AlimentacaoService {
 
-  private readonly API_URL = 'http://187.77.240.149:82/api/alimentacao';
+  private readonly API_URL = 'http://localhost:8080/api/alimentacao';
 
   constructor(private http: HttpClient) { }
 
