@@ -186,7 +186,9 @@ export class GerenciarBanco implements OnInit {
       respostaCorreta: "",
       competencia: "",
       conceito: "",
-      comentarioTecnico: ""
+      comentarioTecnico: "",
+      nivel: "UNIVERSITARIO_INTERMEDIARIO",
+      dataCriacao: new Date().toISOString().split('.')[0],
     } as BancoQuestao;
   }
 }

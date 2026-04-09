@@ -4,6 +4,12 @@ export type TipoQuestao =
   | 'VERDADEIRO_FALSO' 
   | 'DISCURSIVA';
 
+
+export type NivelTecnico =
+  | 'UNIVERSITARIO_INICIANTE'
+  | 'UNIVERSITARIO_INTERMEDIARIO'
+  | 'UNIVERSITARIO_AVANCADO';
+
 export interface BancoQuestao {
   id?: string; 
   
@@ -24,5 +30,7 @@ export interface BancoQuestao {
   competencia: string;
 
   dataCriacao?: string;
+
+  nivel?: NivelTecnico;
   
 }

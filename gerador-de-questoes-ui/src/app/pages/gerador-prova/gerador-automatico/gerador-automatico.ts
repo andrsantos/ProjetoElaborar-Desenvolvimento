@@ -281,7 +281,12 @@ export class GeradorAutomatico implements OnInit {
 
     comentarioTecnico: questao.comentarioTecnico || "",
 
-    competencia: questao.competencia || ""
+    competencia: questao.competencia || "",
+
+    nivel: "UNIVERSITARIO_INTERMEDIARIO",
+
+    dataCriacao: new Date().toISOString().split('.')[0],
+
   };
 
   }
