@@ -10,7 +10,7 @@ import { Prompt } from '../../models/prompt.model';
 })
 export class GerenciamentoService {
 
-  private readonly API_URL = 'http://localhost:8080/api/gerenciamento';
+  private readonly API_URL = 'http://187.77.240.149:82/api/gerenciamento';
 
   constructor(private http: HttpClient) {}
   
