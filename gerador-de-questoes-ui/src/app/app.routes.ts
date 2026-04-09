@@ -11,6 +11,7 @@ import { BancoDashboard } from './pages/banco-dashboard/banco-dashboard';
 import { BancoQuestoes } from './pages/banco-dashboard/banco-questoes/banco-questoes';
 import { SelecionarQuestao } from './pages/banco-dashboard/selecionar-questao/selecionar-questao';
 import { Gerenciamento } from './pages/gerenciamento/gerenciamento';
+import { ProvaBuilder } from './pages/prova-builder/prova-builder';
 
 export const routes: Routes = [
    {
@@ -33,6 +34,11 @@ export const routes: Routes = [
     path: 'gerar-prova/manual',
     component: GeradorManual,
     title: 'Gerador de Prova '
+  },
+  {
+    path: 'gerar-prova/prova-builder',
+    component: ProvaBuilder,
+    title: 'Gerador de Prova'
   },
   {
     path: 'provas-salvas',

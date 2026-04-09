@@ -4,11 +4,15 @@ import com.Projeto.GeradorDeQuestoes.dto.GeracaoAutomaticaRequest;
 import com.Projeto.GeradorDeQuestoes.dto.GerarQuestaoRequest;
 import com.Projeto.GeradorDeQuestoes.dto.Prova;
 import com.Projeto.GeradorDeQuestoes.dto.Questao;
+import com.Projeto.GeradorDeQuestoes.dto.QuestaoDTO;
+import com.Projeto.GeradorDeQuestoes.services.BancoQuestaoService;
 import com.Projeto.GeradorDeQuestoes.services.GeradorProvaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,9 +22,11 @@ import java.util.UUID;
 public class GeradorProvaController {
 
     private final GeradorProvaService provaService;
+    private final BancoQuestaoService bancoQuestaoService;
 
-    public GeradorProvaController(GeradorProvaService provaService) {
+    public GeradorProvaController(GeradorProvaService provaService, BancoQuestaoService bancoQuestaoService) {
         this.provaService = provaService;
+        this.bancoQuestaoService = bancoQuestaoService;
     }
 
 
@@ -72,6 +78,43 @@ public class GeradorProvaController {
             return ResponseEntity.status(500).body(e.getMessage()); 
         }
     }
+
+    @PostMapping("/{id}/prova-banco")
+    public ResponseEntity<?> gerarProvaBanco(
+            @PathVariable UUID id, 
+            @RequestBody GeracaoAutomaticaRequest request) {
+
+        try {
+            request.getTopicos().forEach( topico -> {
+                System.out.println("-----Quantidade Dificeis------ " + topico.getQuantidadeDificeis());
+                System.out.println("-----Quantidade Médias------ " + topico.getQuantidadeMedias());
+                System.out.println("-----Quantidade Fáceis -------" + topico.getQuantidadeFaceis());
+            });
+            
+            List<QuestaoDTO> questoesGeradasBanco = bancoQuestaoService.gerarQuestoesParaProva(request);
+            List<Questao> questoesParaConverter = new ArrayList<>();
+            questoesGeradasBanco.forEach(questao -> 
+                questoesParaConverter.add(new Questao(
+                    questao.getId().toString(),
+                    questao.getEnunciado(),
+                    questao.getAlternativas(),
+                    questao.getRespostaCorreta(),
+                    questao.getConceito(),
+                    questao.getCompetencia(),
+                    questao.getComentarioTecnico(),
+                    questao.getNivel()
+                ))
+            );
+
+            Prova prova = provaService.adicionarQuestoesDoBanco(id, questoesParaConverter);
+            return ResponseEntity.ok(prova);
+
+        } catch (Exception e) {
+            e.printStackTrace(); 
+            return ResponseEntity.status(500).body(e.getMessage()); 
+        }
+    }
+
     
     @PostMapping("/{id}/manual")
     public ResponseEntity<Prova> salvarProvaManual(

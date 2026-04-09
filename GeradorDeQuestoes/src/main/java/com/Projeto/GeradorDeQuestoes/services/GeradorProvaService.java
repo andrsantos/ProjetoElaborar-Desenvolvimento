@@ -64,6 +64,18 @@ public class GeradorProvaService {
         return prova;
     }
 
+    public Prova adicionarQuestoesDoBanco(UUID idProva, List<Questao> questoesBanco) {
+        Prova prova = getProva(idProva);
+        if (prova == null) {
+            throw new RuntimeException("Prova não encontrada!"); 
+        }
+
+        questoesBanco.forEach(prova::adicionarQuestao);
+
+        return prova;
+    }
+
+
   
     public Prova descartarQuestao(UUID idProva, int indiceQuestao) {
         Prova prova = getProva(idProva);

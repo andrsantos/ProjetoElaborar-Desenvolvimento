@@ -1,7 +1,7 @@
 <div class="container">
   <header>
-    <h1>Nova Prova</h1>
-    <p class="subtitle">Escolha como você deseja criar sua prova hoje.</p>
+    <h1>Geração</h1>
+    <p class="subtitle">Escolha o que você deseja gerar.</p>
   </header>
 
   <div class="menu-grid">
@@ -19,22 +19,22 @@
         </svg>
       </div>
       <div class="card-content">
-        <h2>Geração Automática</h2>
-        <p>Selecione os tópicos e deixe a IA montar a prova para você.</p>
+        <h2>Geração de Questões</h2>
+        <p>Selecione os tópicos e deixe a IA criar questões para você.</p>
       </div>
       <span class="arrow">&rarr;</span>
     </a>
 
     <!-- OPÇÃO 2: MANUAL -->
     <!-- Redireciona para a rota da geração manual -->
-    <a [routerLink]="['/gerar-prova/manual']" class="menu-card manual">
+    <a [routerLink]="['/gerar-prova/prova-builder']" class="menu-card manual">
       <div class="icon-container">
         <!-- Ícone de "Lápis/Manual" -->
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       </div>
       <div class="card-content">
-        <h2>Geração Manual</h2>
-        <p>Monte slot por slot, escolhendo detalhadamente cada questão.</p>
+        <h2>Geração de Prova</h2>
+        <p>Gere uma prova automaticamente a partir das suas questões no banco de dados.</p>
       </div>
       <span class="arrow">&rarr;</span>
     </a>

@@ -1,8 +1,8 @@
 <div class="container">
   
   <header>
-    <h1>Gerador de Questões</h1>
-    <p class="subtitle" *ngIf="provaId" style="display:none;">ID da Prova Ativa: {{ provaId }}</p>
+    <h1>Gerador de Prova (Modo Automático)</h1>
+    <p class="subtitle" *ngIf="provaId">ID da Prova Ativa: {{ provaId }}</p>
     <p class="subtitle" *ngIf="!provaId">Criando sessão de prova...</p>
   </header>
 
@@ -84,8 +84,8 @@
 
     <!-- Botão Gerar -->
     <div class="form-gerar-final" *ngIf="topicosSelecionados.length > 0">
-      <button (click)="onGerarProvaAutomatica()" [disabled]="isLoadingAdicionar">
-        <span *ngIf="!isLoadingAdicionar">2. Gerar Questões da Prova</span>
+      <button (click)="onGerarProvaBanco()" [disabled]="isLoadingAdicionar">
+        <span *ngIf="!isLoadingAdicionar">2. Gerar Prova</span>
         <span *ngIf="isLoadingAdicionar" class="loader"></span>
       </button>
     </div>
@@ -93,7 +93,7 @@
   </div>
 
   <!-- RESULTADOS -->
-<main *ngIf="prova$ | async as prova">
+  <main *ngIf="prova$ | async as prova">
   <div class="secao-carrinho" *ngIf="prova.questoes.length > 0">
     <hr class="separador-grande">
     <h2>3. Questões Adicionadas à Prova ({{ prova.questoes.length }})</h2>
@@ -151,10 +151,6 @@
             Comentários
           </button>
 
-          <button class="btn-cadastrar-banco" (click)="cadastrarQuestao(questao,i)"
-           [disabled]="questoesCadastradas.has(i)">
-          {{ questoesCadastradas.has(i) ? 'Questão já cadastrada' : 'Cadastrar no Banco' }}          
-        </button>
         </div>
       </div>
     </div>
@@ -196,6 +192,4 @@
     </div>
 
   </div>
-
-
-</div>
+  </div>

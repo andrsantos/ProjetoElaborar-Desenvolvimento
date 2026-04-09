@@ -12,7 +12,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 export class Sidebar {
   navLinks = [
     { path: '/', label: 'Início', exact: true },
-    { path: '/gerar-prova', label: 'Gerar Prova', exact: false },
+    { path: '/gerar-prova', label: 'Geração', exact: false },
     { path: '/provas-salvas', label: 'Provas Salvas', exact: false },
     { path: '/banco-questoes', label: 'Banco de Questões', exact: false },
     { path: '/alimentacao', label: 'Alimentação', exact: false },

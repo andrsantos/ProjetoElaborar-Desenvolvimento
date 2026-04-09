@@ -1,5 +1,6 @@
 package com.Projeto.GeradorDeQuestoes.dto;
 import java.util.Map;
+import com.Projeto.GeradorDeQuestoes.enums.NivelTecnico;
 
 public class Questao
 
@@ -14,6 +15,7 @@ public class Questao
     String competencia;
     String comentarioTecnico;
     String topico;
+    NivelTecnico nivel;
 
 
 
@@ -24,6 +26,19 @@ public class Questao
         this.respostaCorreta = respostaCorreta;
         this.explicacao = explicacao;
     }
+
+    public Questao(String id, String enunciado, Map<String,String> alternativas, String respostaCorreta, 
+        String conceito, String competencia, String comentarioTecnico, NivelTecnico nivel) {
+        this.id = id;
+        this.enunciado = enunciado;
+        this.alternativas = alternativas;
+        this.respostaCorreta = respostaCorreta;
+        this.conceito = conceito;
+        this.competencia = competencia;
+        this.comentarioTecnico = comentarioTecnico;
+        this.nivel = nivel;
+    }
+
     
 
     public String getExplicacao() {

@@ -1,5 +1,6 @@
 package com.Projeto.GeradorDeQuestoes.entities;
 
+import com.Projeto.GeradorDeQuestoes.enums.NivelTecnico;
 import com.Projeto.GeradorDeQuestoes.enums.TipoQuestao;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -43,6 +44,10 @@ public class BancoQuestaoEntity {
     
     @Column(name = "competencia", columnDefinition = "TEXT")
     private String competencia;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "nivel")
+    private NivelTecnico nivel;
 
     @Column(name = "data_criacao")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -94,6 +99,14 @@ public class BancoQuestaoEntity {
         this.dataCriacao = dataCriacao;
     }
 
+    public NivelTecnico getNivel() {
+        return this.nivel;
+    }
+
+    public void setNivel(NivelTecnico nivel) {
+        this.nivel = nivel;
+    }
+    
 
 
 }

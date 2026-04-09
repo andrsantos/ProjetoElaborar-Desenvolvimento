@@ -13,10 +13,10 @@ import { Questao } from '../../models/questao.model';
 })
 export class ProvaService {
 
-  private readonly API_URL = 'http://187.77.240.149:82/api/provas';
-  private readonly API_URL_SALVAS = 'http://187.77.240.149:82/api/provas-salvas';
-  private readonly API_URL_TOPICOS = 'http://187.77.240.149:82/api/topicos'; 
-  private readonly API_QUESTOES_GERAR = 'http://187.77.240.149:82/api/questoes/gerar'; 
+  private readonly API_URL = 'http://localhost:8080/api/provas';
+  private readonly API_URL_SALVAS = 'http://localhost:8080/api/provas-salvas';
+  private readonly API_URL_TOPICOS = 'http://localhost:8080/api/topicos'; 
+  private readonly API_QUESTOES_GERAR = 'http://localhost:8080/api/questoes/gerar'; 
 
   constructor(private http: HttpClient) {}
 
@@ -34,6 +34,12 @@ export class ProvaService {
 
   adicionarQuestoes(id: string, request: GerarQuestaoRequest): Observable<Prova> {
     return this.http.post<Prova>(`${this.API_URL}/${id}/questoes`, request);
+  }
+
+  gerarProvaBanco(id: string, topicos: TopicoQuantidade[]): Observable<Prova> {
+  const request = { topicos: topicos };
+  console.log("Request gerarProvaBanco:", request);
+  return this.http.post<Prova>(`${this.API_URL}/${id}/prova-banco`, request);
   }
 
   adicionarQuestoesAutomatico(id: string, topicos: TopicoQuantidade[]): Observable<Prova> {

@@ -1,9 +1,13 @@
 package com.Projeto.GeradorDeQuestoes.dto;
 
 import java.util.Map;
+import java.util.UUID;
+
+import com.Projeto.GeradorDeQuestoes.enums.NivelTecnico;
 
 public class QuestaoDTO {
-
+    
+    UUID id;
     String enunciado;
     Map<String, String> alternativas; 
     String respostaCorreta;
@@ -12,7 +16,7 @@ public class QuestaoDTO {
     String competencia;
     String comentarioTecnico;
     String topico;
-
+    NivelTecnico nivel;
 
     public QuestaoDTO(String enunciado, Map<String,String> alternativas, String respostaCorreta, String explicacao, String conceito, String competencia, String comentarioTecnico) {
         this.enunciado = enunciado;
@@ -22,6 +26,18 @@ public class QuestaoDTO {
         this.conceito = conceito;
         this.competencia = competencia;
         this.comentarioTecnico = comentarioTecnico;
+    }
+
+        public QuestaoDTO(UUID id, String enunciado, Map<String,String> alternativas, String respostaCorreta, 
+        String conceito, String competencia, String comentarioTecnico, NivelTecnico nivel) {
+        this.id = id;
+        this.enunciado = enunciado;
+        this.alternativas = alternativas;
+        this.respostaCorreta = respostaCorreta;
+        this.conceito = conceito;
+        this.competencia = competencia;
+        this.comentarioTecnico = comentarioTecnico;
+        this.nivel = nivel;
     }
 
 
@@ -89,6 +105,24 @@ public class QuestaoDTO {
     public void setTopico(String topico) {
         this.topico = topico;
     }
+
+    public NivelTecnico getNivel() {
+        return this.nivel;
+    }
+
+    public void setNivel(NivelTecnico nivel) {
+        this.nivel = nivel;
+    }
+
+    public UUID getId() {
+        return this.id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+
 
 
     
